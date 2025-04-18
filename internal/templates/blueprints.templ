@@ -15,12 +15,12 @@ templ Blueprints(blueprints []models.RoutineBlueprint) {
 				<ul class="blueprint-items">
 					for _, blueprint := range blueprints {
 						<li class="blueprint-item">
-							<a href={templ.SafeURL(fmt.Sprintf("/blueprints/%d", blueprint.ID))}>
-								<h3>{blueprint.Name}</h3>
+							<a href={ templ.SafeURL(fmt.Sprintf("/blueprints/%d", blueprint.ID)) }>
+								<h3>{ blueprint.Name }</h3>
 								<div class="blueprint-meta">
-									<p>Complete by: {blueprint.ToBeCompletedBy}</p>
+									<p>Complete by: { blueprint.ToBeCompletedBy }</p>
 									if blueprint.Recurrence != "" {
-										<span class="recurrence-badge">{string(blueprint.Recurrence)}</span>
+										<span class="recurrence-badge">{ string(blueprint.Recurrence) }</span>
 									}
 									if blueprint.AllowMultipleInstancesPerDay {
 										<p>Multiple instances per day allowed</p>
@@ -39,7 +39,6 @@ templ Blueprints(blueprints []models.RoutineBlueprint) {
 			<p>Select a blueprint to view details</p>
 		</div>
 	</div>
-
 	<style>
 		.blueprints-container {
 			display: flex;

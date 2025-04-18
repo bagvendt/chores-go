@@ -7,66 +7,64 @@ import (
 
 templ BlueprintForm(blueprint *models.RoutineBlueprint, chores []models.Chore) {
 	<div class="blueprint-form">
-		<form id="blueprint-form" hx-post={ func() string {
+		<form
+			id="blueprint-form"
+			hx-post={ func() string {
 				if blueprint.ID == 0 {
 					return "/blueprints/"
 				}
 				return fmt.Sprintf("/blueprints/%d", blueprint.ID)
-			}() } hx-target="body">
+			}() }
+			hx-target="body"
+		>
 			<div class="form-group">
 				<label for="name">Name</label>
-				<input type="text" id="name" name="name" value={blueprint.Name} required/>
+				<input type="text" id="name" name="name" value={ blueprint.Name } required/>
 			</div>
-
 			<div class="form-group">
 				<label for="to-be-completed-by">To be completed by</label>
-				<input type="time" id="to-be-completed-by" name="to_be_completed_by" value={blueprint.ToBeCompletedBy} required/>
+				<input type="time" id="to-be-completed-by" name="to_be_completed_by" value={ blueprint.ToBeCompletedBy } required/>
 			</div>
-
 			<div class="form-group">
 				<label>
-					<input 
-						type="checkbox" 
-						name="allow_multiple_instances_per_day" 
-						checked?={blueprint.AllowMultipleInstancesPerDay}
+					<input
+						type="checkbox"
+						name="allow_multiple_instances_per_day"
+						checked?={ blueprint.AllowMultipleInstancesPerDay }
 					/>
 					Allow multiple instances per day
 				</label>
 			</div>
-
 			<div class="form-group">
 				<label for="recurrence">Recurrence</label>
 				<select id="recurrence" name="recurrence">
 					<option value="">None</option>
-					<option value="Daily" selected?={blueprint.Recurrence == models.Daily}>Daily</option>
-					<option value="Weekly" selected?={blueprint.Recurrence == models.Weekly}>Weekly</option>
+					<option value="Daily" selected?={ blueprint.Recurrence == models.Daily }>Daily</option>
+					<option value="Weekly" selected?={ blueprint.Recurrence == models.Weekly }>Weekly</option>
 				</select>
 			</div>
-
 			<div class="form-group">
 				<label>Chores</label>
 				<div class="chores-grid">
 					for _, chore := range chores {
 						<label class="chore-item">
-							<input 
-								type="checkbox" 
-								name="chores" 
-								value={fmt.Sprint(chore.ID)}
+							<input
+								type="checkbox"
+								name="chores"
+								value={ fmt.Sprint(chore.ID) }
 							/>
-							<span class="chore-name">{chore.Name}</span>
-							<span class="chore-points">{fmt.Sprintf("%d points", chore.DefaultPoints)}</span>
+							<span class="chore-name">{ chore.Name }</span>
+							<span class="chore-points">{ fmt.Sprintf("%d points", chore.DefaultPoints) }</span>
 						</label>
 					}
 				</div>
 			</div>
-
 			<div class="form-actions">
 				<button type="submit" class="save-button">Save Blueprint</button>
 				<button type="button" class="cancel-button" hx-get="/blueprints">Cancel</button>
 			</div>
 		</form>
 	</div>
-
 	<style>
 		.blueprint-form {
 			max-width: 600px;
@@ -161,19 +159,18 @@ templ BlueprintForm(blueprint *models.RoutineBlueprint, chores []models.Chore) {
 templ BlueprintDetail(blueprint *models.RoutineBlueprint, chores []models.RoutineBlueprintChore) {
 	<div class="blueprint-detail">
 		<div class="blueprint-header">
-			<h2>{blueprint.Name}</h2>
+			<h2>{ blueprint.Name }</h2>
 			<div class="blueprint-meta">
-				<p>Complete by: {blueprint.ToBeCompletedBy}</p>
+				<p>Complete by: { blueprint.ToBeCompletedBy }</p>
 				if blueprint.Recurrence != "" {
-					<p>Recurs: {string(blueprint.Recurrence)}</p>
+					<p>Recurs: { string(blueprint.Recurrence) }</p>
 				}
 				if blueprint.AllowMultipleInstancesPerDay {
 					<p>Multiple instances per day allowed</p>
 				}
-				<p class="text-muted">Created: {blueprint.Created.Format("Jan 02, 2006")}</p>
+				<p class="text-muted">Created: { blueprint.Created.Format("Jan 02, 2006") }</p>
 			</div>
 		</div>
-
 		<div class="chores-list">
 			<h3>Chores</h3>
 			if len(chores) == 0 {
@@ -183,15 +180,14 @@ templ BlueprintDetail(blueprint *models.RoutineBlueprint, chores []models.Routin
 					for _, choreBlueprint := range chores {
 						if choreBlueprint.Chore != nil {
 							<li class="chore-item">
-								<span class="chore-name">{choreBlueprint.Chore.Name}</span>
-								<span class="chore-points">{fmt.Sprintf("%d points", choreBlueprint.Chore.DefaultPoints)}</span>
+								<span class="chore-name">{ choreBlueprint.Chore.Name }</span>
+								<span class="chore-points">{ fmt.Sprintf("%d points", choreBlueprint.Chore.DefaultPoints) }</span>
 							</li>
 						}
 					}
 				</ul>
 			}
 		</div>
-
 		<div class="blueprint-actions">
 			<button class="edit-button" hx-get={ fmt.Sprintf("/blueprints/%d/edit", blueprint.ID) } hx-target="body">
 				Edit Blueprint
@@ -200,7 +196,6 @@ templ BlueprintDetail(blueprint *models.RoutineBlueprint, chores []models.Routin
 				Delete
 			</button>
 		</div>
-
 		<style>
 			.blueprint-detail {
 				padding: 1rem;

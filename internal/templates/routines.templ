@@ -15,9 +15,9 @@ templ Routines(routines []models.Routine) {
 				<ul class="routine-items">
 					for _, routine := range routines {
 						<li class="routine-item">
-							<a href={templ.SafeURL(fmt.Sprintf("/routines/%d", routine.ID))}>
-								<h3>{routine.Name}</h3>
-								<p class="routine-details">To be completed by: {routine.ToBeCompletedBy}</p>
+							<a href={ templ.SafeURL(fmt.Sprintf("/routines/%d", routine.ID)) }>
+								<h3>{ routine.Name }</h3>
+								<p class="routine-details">To be completed by: { routine.ToBeCompletedBy }</p>
 							</a>
 						</li>
 					}
