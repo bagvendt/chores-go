@@ -4,20 +4,22 @@ import (
 	"log"
 	"net/http"
 
-	"chores/internal/database"
+	"github.com/bagvendt/chores/internal/database"
+	"github.com/bagvendt/chores/internal/handlers"
 )
 
 func main() {
-	// Initialize database
+	// Initialize the database first
 	if err := database.Init(); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	// TODO: Setup routes
-	// TODO: Setup templates
+	// Set up the server
+	http.HandleFunc("/", handlers.MainHandler)
 
-	log.Println("Starting server on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal(err)
+	log.Println("Server is starting on port 8080...")
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatalf("Server failed to start: %v", err)
 	}
-} 
+}

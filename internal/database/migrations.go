@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -11,142 +12,189 @@ import (
 	"strings"
 )
 
-// Migration represents a database migration
-type Migration struct {
-	ID   int
-	SQL  string
-	Path string
+// MigrationManager handles the application of database migrations
+type MigrationManager struct {
+	db *sql.DB
 }
 
-// RunMigrations runs all pending migrations in order
-func RunMigrations() error {
-	// Get list of migration files
-	migrations, err := getMigrationFiles()
-	if err != nil {
-		return fmt.Errorf("error getting migration files: %w", err)
-	}
-
-	// Get list of applied migrations
-	applied, err := getAppliedMigrations()
-	if err != nil {
-		return fmt.Errorf("error getting applied migrations: %w", err)
-	}
-
-	// Filter out already applied migrations
-	pending := getPendingMigrations(migrations, applied)
-
-	// Apply pending migrations
-	for _, migration := range pending {
-		if err := applyMigration(migration); err != nil {
-			return fmt.Errorf("error applying migration %d: %w", migration.ID, err)
-		}
-	}
-
-	return nil
+// NewMigrationManager creates a new migration manager
+func NewMigrationManager(db *sql.DB) *MigrationManager {
+	return &MigrationManager{db: db}
 }
 
-func getMigrationFiles() ([]Migration, error) {
-	var migrations []Migration
-
-	err := filepath.WalkDir("migrations", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		if !strings.HasSuffix(path, ".sql") {
-			return nil
-		}
-
-		// Extract migration ID from filename
-		filename := filepath.Base(path)
-		idStr := strings.TrimSuffix(filename, ".sql")
-		id, err := strconv.Atoi(idStr)
-		if err != nil {
-			return fmt.Errorf("invalid migration filename: %s", filename)
-		}
-
-		// Read migration SQL
-		sql, err := os.ReadFile(path)
-		if err != nil {
-			return fmt.Errorf("error reading migration file %s: %w", path, err)
-		}
-
-		migrations = append(migrations, Migration{
-			ID:   id,
-			SQL:  string(sql),
-			Path: path,
-		})
-
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Sort migrations by ID
-	sort.Slice(migrations, func(i, j int) bool {
-		return migrations[i].ID < migrations[j].ID
-	})
-
-	return migrations, nil
+// EnsureMigrationsTable creates the migrations table if it doesn't exist
+func (m *MigrationManager) EnsureMigrationsTable() error {
+	_, err := m.db.Exec(`
+		CREATE TABLE IF NOT EXISTS migrations (
+			id INTEGER PRIMARY KEY,
+			applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			migration_id INTEGER UNIQUE NOT NULL
+		)
+	`)
+	return err
 }
 
-func getAppliedMigrations() (map[int]struct{}, error) {
-	applied := make(map[int]struct{})
+// GetAppliedMigrations returns a map of already applied migration IDs
+func (m *MigrationManager) GetAppliedMigrations() (map[int]bool, error) {
+	applied := make(map[int]bool)
 
-	rows, err := DB.Query("SELECT migration_id FROM migrations")
+	// First ensure the migrations table exists
+	if err := m.EnsureMigrationsTable(); err != nil {
+		return nil, fmt.Errorf("error creating migrations table: %w", err)
+	}
+
+	rows, err := m.db.Query("SELECT migration_id FROM migrations ORDER BY migration_id")
 	if err != nil {
-		// If the migrations table doesn't exist yet, return empty map
-		if strings.Contains(err.Error(), "no such table") {
-			return applied, nil
-		}
-		return nil, err
+		return nil, fmt.Errorf("error querying migrations: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var id int
 		if err := rows.Scan(&id); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error scanning migration row: %w", err)
 		}
-		applied[id] = struct{}{}
+		applied[id] = true
 	}
 
 	return applied, nil
 }
 
-func getPendingMigrations(all []Migration, applied map[int]struct{}) []Migration {
-	var pending []Migration
-	for _, m := range all {
-		if _, exists := applied[m.ID]; !exists {
-			pending = append(pending, m)
-		}
-	}
-	return pending
-}
-
-func applyMigration(migration Migration) error {
-	tx, err := DB.Begin()
+// RunMigrations applies any pending migrations
+func (m *MigrationManager) RunMigrations() error {
+	// Get applied migrations
+	applied, err := m.GetAppliedMigrations()
 	if err != nil {
 		return err
 	}
 
-	// Execute migration SQL
-	if _, err := tx.Exec(migration.SQL); err != nil {
-		tx.Rollback()
+	// Get migration files
+	files, err := m.GetMigrationFiles()
+	if err != nil {
 		return err
+	}
+
+	// Sort numerically by migration ID
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].ID < files[j].ID
+	})
+
+	// Apply each migration in order
+	for _, file := range files {
+		// Skip if already applied
+		if applied[file.ID] {
+			log.Printf("Migration %d already applied, skipping", file.ID)
+			continue
+		}
+
+		log.Printf("Applying migration %d: %s", file.ID, file.Path)
+		
+		// Apply migration within a transaction
+		if err := m.ApplyMigration(file); err != nil {
+			return fmt.Errorf("failed to apply migration %d: %w", file.ID, err)
+		}
+		
+		log.Printf("Migration %d applied successfully", file.ID)
+	}
+
+	return nil
+}
+
+// MigrationFile represents a SQL migration file
+type MigrationFile struct {
+	ID   int
+	Path string
+	SQL  string
+}
+
+// GetMigrationFiles finds all SQL migration files
+func (m *MigrationManager) GetMigrationFiles() ([]MigrationFile, error) {
+	var files []MigrationFile
+
+	err := filepath.WalkDir("migrations", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip directories
+		if d.IsDir() {
+			return nil
+		}
+
+		// Only process SQL files
+		if !strings.HasSuffix(path, ".sql") {
+			return nil
+		}
+
+		// Extract migration ID from filename
+		filename := filepath.Base(path)
+		idPart := strings.Split(filename, "_")[0]
+		id, err := strconv.Atoi(idPart)
+		if err != nil {
+			log.Printf("Warning: Skipping file with invalid migration ID format: %s", path)
+			return nil
+		}
+
+		// Read file content
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("error reading migration file %s: %w", path, err)
+		}
+
+		files = append(files, MigrationFile{
+			ID:   id,
+			Path: path,
+			SQL:  string(content),
+		})
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error walking migrations directory: %w", err)
+	}
+
+	return files, nil
+}
+
+// ApplyMigration applies a single migration within a transaction
+func (m *MigrationManager) ApplyMigration(file MigrationFile) error {
+	// Start transaction
+	tx, err := m.db.Begin()
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+
+	// Ensure we either commit or rollback
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Execute migration SQL
+	if _, err = tx.Exec(file.SQL); err != nil {
+		return fmt.Errorf("error executing migration SQL: %w", err)
 	}
 
 	// Record migration as applied
-	if _, err := tx.Exec("INSERT INTO migrations (migration_id) VALUES (?)", migration.ID); err != nil {
-		tx.Rollback()
-		return err
+	// We do this even if the SQL already inserts into migrations 
+	// as a safety measure to ensure it's recorded
+	_, err = tx.Exec("INSERT OR IGNORE INTO migrations (migration_id) VALUES (?)", file.ID)
+	if err != nil {
+		return fmt.Errorf("error recording migration: %w", err)
 	}
 
-	return tx.Commit()
+	// Commit transaction
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("error committing transaction: %w", err)
+	}
+
+	return nil
+}
+
+// RunMigrations runs all pending migrations in order
+func RunMigrations() error {
+	manager := NewMigrationManager(DB)
+	return manager.RunMigrations()
 } 

@@ -3,10 +3,9 @@ package handlers
 import (
 	"net/http"
 
-	"chores/internal/templates"
+	"github.com/bagvendt/chores/internal/templates"
 )
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
-	component := templates.Main()
-	component.Render(r.Context(), w)
-} 
+	templates.Main().Render(r.Context(), w)
+}

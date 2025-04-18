@@ -1,7 +1,7 @@
 package database
 
 import (
-	"chores/internal/models"
+	"github.com/bagvendt/chores/internal/models"
 	"database/sql"
 	"time"
 )

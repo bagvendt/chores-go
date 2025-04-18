@@ -1,43 +1,37 @@
 package templates
 
-import "github.com/a-h/templ"
-
-func Main() templ.Component {
-	return templ.ComponentFunc(func(ctx templ.Context) error {
-		return templ.Raw(`
-			<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<title>Chores</title>
-				<style>
-					:root {
-						--primary-color: #4a90e2;
-						--secondary-color: #f5f5f5;
-					}
-					
-					body {
-						font-family: system-ui, -apple-system, sans-serif;
-						margin: 0;
-						padding: 0;
-						background-color: var(--secondary-color);
-					}
-					
-					.container {
-						max-width: 1200px;
-						margin: 0 auto;
-						padding: 2rem;
-					}
-				</style>
-			</head>
-			<body>
-				<div class="container">
-					<h1>Chores</h1>
-					<p>Welcome to the chores management system!</p>
-				</div>
-			</body>
-			</html>
-		`)
-	})
-} 
+templ Main() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Chores</title>
+			<style>
+				:root {
+					--primary-color: #4a90e2;
+					--secondary-color: #f5f5f5;
+				}
+				
+				body {
+					font-family: system-ui, -apple-system, sans-serif;
+					margin: 0;
+					padding: 0;
+					background-color: var(--secondary-color);
+				}
+				
+				.container {
+					max-width: 1200px;
+					margin: 0 auto;
+					padding: 2rem;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="container">
+				<h1>sChores</h1>
+				<p>Welcome to the chores management system!</p>
+			</div>
+		</body>
+	</html>
+}
