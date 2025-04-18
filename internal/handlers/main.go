@@ -7,5 +7,6 @@ import (
 )
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
-	templates.Main().Render(r.Context(), w)
+	content := templates.MainContent()
+	templates.Main(content).Render(r.Context(), w)
 }

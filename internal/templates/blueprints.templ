@@ -1,0 +1,114 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/bagvendt/chores/internal/models"
+)
+
+templ Blueprints(blueprints []models.RoutineBlueprint) {
+	<div class="blueprints-container">
+		<div class="blueprints-list">
+			<h2>Routine Blueprints</h2>
+			if len(blueprints) == 0 {
+				<p>No blueprints yet. Create your first blueprint!</p>
+			} else {
+				<ul class="blueprint-items">
+					for _, blueprint := range blueprints {
+						<li class="blueprint-item">
+							<a href={templ.SafeURL(fmt.Sprintf("/blueprints/%d", blueprint.ID))}>
+								<h3>{blueprint.Name}</h3>
+								<div class="blueprint-meta">
+									<p>Complete by: {blueprint.ToBeCompletedBy}</p>
+									if blueprint.Recurrence != "" {
+										<span class="recurrence-badge">{string(blueprint.Recurrence)}</span>
+									}
+									if blueprint.AllowMultipleInstancesPerDay {
+										<p>Multiple instances per day allowed</p>
+									}
+								</div>
+							</a>
+						</li>
+					}
+				</ul>
+			}
+			<button class="create-button" hx-get="/blueprints/new" hx-target=".detail-view">
+				Create New Blueprint
+			</button>
+		</div>
+		<div class="detail-view">
+			<p>Select a blueprint to view details</p>
+		</div>
+	</div>
+
+	<style>
+		.blueprints-container {
+			display: flex;
+			gap: 2rem;
+			height: 100%;
+		}
+
+		.blueprints-list {
+			flex: 1;
+			max-width: 300px;
+			border-right: 1px solid var(--border-color);
+			padding-right: 1rem;
+		}
+
+		.detail-view {
+			flex: 2;
+			padding: 1rem;
+		}
+
+		.blueprint-items {
+			list-style: none;
+			padding: 0;
+			margin: 1rem 0;
+		}
+
+		.blueprint-item {
+			margin-bottom: 1rem;
+		}
+
+		.blueprint-item a {
+			display: block;
+			padding: 1rem;
+			text-decoration: none;
+			color: inherit;
+			background: white;
+			border: 1px solid var(--border-color);
+			border-radius: 4px;
+			transition: all 0.2s;
+		}
+
+		.blueprint-item a:hover {
+			background: var(--secondary-color);
+			transform: translateX(2px);
+		}
+
+		.blueprint-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 0.5rem;
+		}
+
+		.blueprint-header h3 {
+			margin: 0;
+			font-size: 1rem;
+		}
+
+		.recurrence-badge {
+			background: var(--primary-color);
+			color: white;
+			padding: 0.2rem 0.5rem;
+			border-radius: 4px;
+			font-size: 0.8rem;
+		}
+
+		.blueprint-meta {
+			margin: 0;
+			color: #666;
+			font-size: 0.9rem;
+		}
+	</style>
+}

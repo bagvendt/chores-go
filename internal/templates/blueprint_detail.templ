@@ -1,0 +1,281 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/bagvendt/chores/internal/models"
+)
+
+templ BlueprintForm(blueprint *models.RoutineBlueprint, chores []models.Chore) {
+	<div class="blueprint-form">
+		<form id="blueprint-form" hx-post={ func() string {
+				if blueprint.ID == 0 {
+					return "/blueprints/"
+				}
+				return fmt.Sprintf("/blueprints/%d", blueprint.ID)
+			}() } hx-target="body">
+			<div class="form-group">
+				<label for="name">Name</label>
+				<input type="text" id="name" name="name" value={blueprint.Name} required/>
+			</div>
+
+			<div class="form-group">
+				<label for="to-be-completed-by">To be completed by</label>
+				<input type="time" id="to-be-completed-by" name="to_be_completed_by" value={blueprint.ToBeCompletedBy} required/>
+			</div>
+
+			<div class="form-group">
+				<label>
+					<input 
+						type="checkbox" 
+						name="allow_multiple_instances_per_day" 
+						checked?={blueprint.AllowMultipleInstancesPerDay}
+					/>
+					Allow multiple instances per day
+				</label>
+			</div>
+
+			<div class="form-group">
+				<label for="recurrence">Recurrence</label>
+				<select id="recurrence" name="recurrence">
+					<option value="">None</option>
+					<option value="Daily" selected?={blueprint.Recurrence == models.Daily}>Daily</option>
+					<option value="Weekly" selected?={blueprint.Recurrence == models.Weekly}>Weekly</option>
+				</select>
+			</div>
+
+			<div class="form-group">
+				<label>Chores</label>
+				<div class="chores-grid">
+					for _, chore := range chores {
+						<label class="chore-item">
+							<input 
+								type="checkbox" 
+								name="chores" 
+								value={fmt.Sprint(chore.ID)}
+							/>
+							<span class="chore-name">{chore.Name}</span>
+							<span class="chore-points">{fmt.Sprintf("%d points", chore.DefaultPoints)}</span>
+						</label>
+					}
+				</div>
+			</div>
+
+			<div class="form-actions">
+				<button type="submit" class="save-button">Save Blueprint</button>
+				<button type="button" class="cancel-button" hx-get="/blueprints">Cancel</button>
+			</div>
+		</form>
+	</div>
+
+	<style>
+		.blueprint-form {
+			max-width: 600px;
+			padding: 1rem;
+		}
+
+		.form-group {
+			margin-bottom: 1.5rem;
+		}
+
+		.form-group label {
+			display: block;
+			margin-bottom: 0.5rem;
+			font-weight: 500;
+		}
+
+		.form-group input[type="time"],
+		.form-group select,
+		.form-group input[type="text"] {
+			width: 100%;
+			padding: 0.5rem;
+			border: 1px solid var(--border-color);
+			border-radius: 4px;
+			font-size: 1rem;
+		}
+
+		.chores-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+			gap: 1rem;
+			margin-top: 0.5rem;
+		}
+
+		.chore-item {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.5rem;
+			border: 1px solid var(--border-color);
+			border-radius: 4px;
+			cursor: pointer;
+		}
+
+		.chore-item:hover {
+			background: var(--secondary-color);
+		}
+
+		.chore-name {
+			flex: 1;
+		}
+
+		.chore-points {
+			color: #666;
+			font-size: 0.9rem;
+		}
+
+		.form-actions {
+			display: flex;
+			gap: 1rem;
+			margin-top: 2rem;
+		}
+
+		.save-button,
+		.cancel-button {
+			padding: 0.5rem 1rem;
+			border: none;
+			border-radius: 4px;
+			font-size: 0.9rem;
+			cursor: pointer;
+		}
+
+		.save-button {
+			background: var(--primary-color);
+			color: white;
+		}
+
+		.save-button:hover {
+			background: #357abd;
+		}
+
+		.cancel-button {
+			background: #f1f1f1;
+			color: #333;
+		}
+
+		.cancel-button:hover {
+			background: #e1e1e1;
+		}
+	</style>
+}
+
+templ BlueprintDetail(blueprint *models.RoutineBlueprint, chores []models.RoutineBlueprintChore) {
+	<div class="blueprint-detail">
+		<div class="blueprint-header">
+			<h2>{blueprint.Name}</h2>
+			<div class="blueprint-meta">
+				<p>Complete by: {blueprint.ToBeCompletedBy}</p>
+				if blueprint.Recurrence != "" {
+					<p>Recurs: {string(blueprint.Recurrence)}</p>
+				}
+				if blueprint.AllowMultipleInstancesPerDay {
+					<p>Multiple instances per day allowed</p>
+				}
+				<p class="text-muted">Created: {blueprint.Created.Format("Jan 02, 2006")}</p>
+			</div>
+		</div>
+
+		<div class="chores-list">
+			<h3>Chores</h3>
+			if len(chores) == 0 {
+				<p>No chores added to this blueprint yet.</p>
+			} else {
+				<ul class="chore-items">
+					for _, choreBlueprint := range chores {
+						if choreBlueprint.Chore != nil {
+							<li class="chore-item">
+								<span class="chore-name">{choreBlueprint.Chore.Name}</span>
+								<span class="chore-points">{fmt.Sprintf("%d points", choreBlueprint.Chore.DefaultPoints)}</span>
+							</li>
+						}
+					}
+				</ul>
+			}
+		</div>
+
+		<div class="blueprint-actions">
+			<button class="edit-button" hx-get={ fmt.Sprintf("/blueprints/%d/edit", blueprint.ID) } hx-target="body">
+				Edit Blueprint
+			</button>
+			<button class="delete-button" hx-delete={ fmt.Sprintf("/blueprints/%d", blueprint.ID) } hx-confirm="Are you sure you want to delete this blueprint?">
+				Delete
+			</button>
+		</div>
+
+		<style>
+			.blueprint-detail {
+				padding: 1rem;
+			}
+
+			.blueprint-header {
+				margin-bottom: 2rem;
+			}
+
+			.blueprint-meta {
+				color: #666;
+				font-size: 0.9rem;
+			}
+
+			.text-muted {
+				color: #888;
+			}
+
+			.chores-list {
+				margin: 2rem 0;
+			}
+
+			.chore-items {
+				list-style: none;
+				padding: 0;
+				margin: 1rem 0;
+			}
+
+			.chore-item {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 0.8rem;
+				background: white;
+				border: 1px solid var(--border-color);
+				border-radius: 4px;
+				margin-bottom: 0.5rem;
+			}
+
+			.chore-points {
+				color: #666;
+				font-size: 0.9rem;
+			}
+
+			.blueprint-actions {
+				display: flex;
+				gap: 1rem;
+			}
+
+			.edit-button,
+			.delete-button {
+				padding: 0.5rem 1rem;
+				border-radius: 4px;
+				cursor: pointer;
+				border: none;
+				font-size: 0.9rem;
+			}
+
+			.edit-button {
+				background: var(--primary-color);
+				color: white;
+			}
+
+			.delete-button {
+				background: #dc3545;
+				color: white;
+			}
+
+			.edit-button:hover {
+				background: #357abd;
+			}
+
+			.delete-button:hover {
+				background: #bb2d3b;
+			}
+		</style>
+	</div>
+}

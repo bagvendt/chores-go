@@ -11,10 +11,11 @@ const (
 )
 
 type RoutineBlueprint struct {
-	ID                          int64          `json:"id"`
-	Created                     time.Time      `json:"created"`
-	Modified                    time.Time      `json:"modified"`
-	ToBeCompletedBy             string         `json:"to_be_completed_by"`
+	ID                           int64          `json:"id"`
+	Created                      time.Time      `json:"created"`
+	Modified                     time.Time      `json:"modified"`
+	Name                         string         `json:"name"`
+	ToBeCompletedBy              string         `json:"to_be_completed_by"`
 	AllowMultipleInstancesPerDay bool           `json:"allow_multiple_instances_per_day"`
-	Recurrence                  RecurrenceType `json:"recurrence,omitempty"`
-} 
+	Recurrence                   RecurrenceType `json:"recurrence,omitempty"`
+}

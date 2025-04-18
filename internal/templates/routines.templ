@@ -1,0 +1,34 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/bagvendt/chores/internal/models"
+)
+
+templ Routines(routines []models.Routine) {
+	<div class="routines-container">
+		<div class="routines-list">
+			<h2>Your Routines</h2>
+			if len(routines) == 0 {
+				<p>No routines yet. Create your first routine!</p>
+			} else {
+				<ul class="routine-items">
+					for _, routine := range routines {
+						<li class="routine-item">
+							<a href={templ.SafeURL(fmt.Sprintf("/routines/%d", routine.ID))}>
+								<h3>{routine.Name}</h3>
+								<p class="routine-details">To be completed by: {routine.ToBeCompletedBy}</p>
+							</a>
+						</li>
+					}
+				</ul>
+			}
+			<button class="create-button" hx-get="/routines/new" hx-target=".detail-view">
+				Create New Routine
+			</button>
+		</div>
+		<div class="detail-view">
+			<p>Select a routine to view details</p>
+		</div>
+	</div>
+}

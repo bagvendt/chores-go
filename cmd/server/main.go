@@ -14,8 +14,11 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	// Set up the server
+	// Set up the server routes
 	http.HandleFunc("/", handlers.MainHandler)
+	http.HandleFunc("/routines/", handlers.RoutinesHandler)
+	http.HandleFunc("/blueprints", handlers.BlueprintsHandler)
+	http.HandleFunc("/blueprints/", handlers.BlueprintsHandler)
 
 	log.Println("Server is starting on port 8080...")
 	err := http.ListenAndServe(":8080", nil)
