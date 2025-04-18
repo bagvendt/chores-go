@@ -75,6 +75,7 @@ func getBlueprintDetail(w http.ResponseWriter, r *http.Request, idStr string) {
 
 	blueprint, chores, err := database.GetBlueprint(id)
 	if err != nil {
+		log.Printf("Failed to load blueprint (ID: %d): %v", id, err)
 		http.Error(w, "Failed to load blueprint", http.StatusInternalServerError)
 		return
 	}

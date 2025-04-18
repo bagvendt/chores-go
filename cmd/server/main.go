@@ -19,6 +19,8 @@ func main() {
 	http.HandleFunc("/routines/", handlers.RoutinesHandler)
 	http.HandleFunc("/blueprints", handlers.BlueprintsHandler)
 	http.HandleFunc("/blueprints/", handlers.BlueprintsHandler)
+	http.HandleFunc("/chores", handlers.ChoresHandler)
+	http.HandleFunc("/chores/", handlers.ChoresHandler)
 
 	log.Println("Server is starting on port 8080...")
 	err := http.ListenAndServe(":8080", nil)

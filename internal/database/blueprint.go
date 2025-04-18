@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/bagvendt/chores/internal/models"
@@ -92,9 +93,9 @@ func GetBlueprint(id int64) (*models.RoutineBlueprint, []models.RoutineBlueprint
 	for rows.Next() {
 		var chore models.RoutineBlueprintChore
 		var choreCreatedStr, choreModifiedStr string
-		var choreImage string
+		var choreImage sql.NullString
 		var choreObj models.Chore
-		var choreObjImage string
+		var choreObjImage sql.NullString
 
 		if err := rows.Scan(
 			&chore.ID,
@@ -113,8 +114,16 @@ func GetBlueprint(id int64) (*models.RoutineBlueprint, []models.RoutineBlueprint
 
 		chore.Created, _ = time.Parse(time.RFC3339, choreCreatedStr)
 		chore.Modified, _ = time.Parse(time.RFC3339, choreModifiedStr)
-		chore.Image = choreImage
-		choreObj.Image = choreObjImage
+		if choreImage.Valid {
+			chore.Image = choreImage.String
+		} else {
+			chore.Image = ""
+		}
+		if choreObjImage.Valid {
+			choreObj.Image = choreObjImage.String
+		} else {
+			choreObj.Image = ""
+		}
 		chore.Chore = &choreObj
 
 		chores = append(chores, chore)
