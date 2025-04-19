@@ -15,11 +15,6 @@ We are focusing on gamification here.
 - Add a main view
 - Add a way to add Routine blueprints with one or more Routine Blueprint Chore
 
-### Out of scope
-
-- A UI for seeing and completing chores
-
-
 
 ## Technical rules
 

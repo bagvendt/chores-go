@@ -10,15 +10,14 @@ templ Base(content templ.Component) {
 			<link rel="stylesheet" href="/static/css/main.css"/>
 			<script src="/static/js/htmx.org@2.0.4"></script>
 			<script src="/static/js/ChoreCard.js" type="module"></script>
-			<script src="/static/js/RoutineCard.js" type="module"></script>
 			<style>
 			</style>
 		</head>
 		<body>
-			<div class="app-layout">
+			<div id="app">
 				<nav class="top">
 				</nav>
-				<main class="main-content">
+				<main>
 					@content
 				</main>
 			</div>

@@ -1,10 +1,17 @@
-package templates;
+package templates
 
-templ Home() {
+import "github.com/bagvendt/chores/internal/models"
+
+templ Home(routines []models.Routine) {
     <div class="home-container">
-        <h1>Welcome to Chores!</h1>
-        <p>Your personal chore management system.</p>
-        <p>Get started by creating your first chore.</p>
-        <a href="/chores/new" class="start-button">Create Your First Chore</a>
+        if len(routines) == 0 {
+            <p>No routines available. Create some routines first!</p>
+        } else {
+            <div class="routines-grid">
+                for _, routine := range routines {
+                    @RoutineCard(routine)
+                }
+            </div>
+        }
     </div>
 }
