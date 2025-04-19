@@ -7,19 +7,19 @@ import (
 	"github.com/bagvendt/chores/internal/models"
 )
 
-// GetRoutines retrieves all routines from the database
-func GetRoutines() ([]models.Routine, error) {
-	rows, err := DB.Query(`
+// GetRoutines retrieves all routines from the database for a specific user
+func GetRoutines(db *sql.DB, userID int64) ([]models.Routine, error) {
+	rows, err := db.Query(`
 		SELECT r.id, r.created, r.modified, r.name, r.to_be_completed_by, r.owner_id,
 		       u.name as owner_name, 
-		       rbc.image as image_url
+		       rb.image as image_url -- Get image from routine_blueprints
 		FROM routines r
 		LEFT JOIN users u ON r.owner_id = u.id
-		LEFT JOIN chore_routines cr ON cr.routine_id = r.id
-		LEFT JOIN routine_blueprint_chores rbc ON rbc.chore_id = cr.chore_id
-		GROUP BY r.id
+		LEFT JOIN routine_blueprints rb ON r.routine_blueprint_id = rb.id -- Join routine_blueprints
+		WHERE r.owner_id = ?
+		-- Removed GROUP BY as it's not needed without aggregating chore data here
 		ORDER BY r.created DESC
-	`)
+	`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func GetRoutines() ([]models.Routine, error) {
 		var r models.Routine
 		var owner models.User
 		var created, modified string
-		var imageUrl sql.NullString
+		var imageUrl sql.NullString // Changed from rbc.image to rb.image
 		err := rows.Scan(
 			&r.ID,
 			&created,
@@ -39,7 +39,7 @@ func GetRoutines() ([]models.Routine, error) {
 			&r.ToBeCompletedBy,
 			&r.OwnerID,
 			&owner.Name,
-			&imageUrl,
+			&imageUrl, // Scan the image URL from rb.image
 		)
 		if err != nil {
 			return nil, err
@@ -49,6 +49,8 @@ func GetRoutines() ([]models.Routine, error) {
 		r.Owner = &owner
 		if imageUrl.Valid {
 			r.ImageUrl = imageUrl.String
+		} else {
+			r.ImageUrl = "" // Handle case where blueprint has no image or routine has no blueprint
 		}
 		routines = append(routines, r)
 	}
@@ -56,21 +58,20 @@ func GetRoutines() ([]models.Routine, error) {
 }
 
 // GetRoutine retrieves a single routine by ID
-func GetRoutine(id int64) (*models.Routine, error) {
+func GetRoutine(db *sql.DB, id int64) (*models.Routine, error) {
 	var r models.Routine
 	var owner models.User
 	var created, modified string
 	var imageUrl sql.NullString
-	err := DB.QueryRow(`
+	err := db.QueryRow(`
 		SELECT r.id, r.created, r.modified, r.name, r.to_be_completed_by, r.owner_id,
 		       u.name as owner_name, 
-		       rbc.image as image_url
+		       rb.image as image_url -- Get image from routine_blueprints
 		FROM routines r
 		LEFT JOIN users u ON r.owner_id = u.id
-		LEFT JOIN chore_routines cr ON cr.routine_id = r.id
-		LEFT JOIN routine_blueprint_chores rbc ON rbc.chore_id = cr.chore_id
+		LEFT JOIN routine_blueprints rb ON r.routine_blueprint_id = rb.id -- Join routine_blueprints
 		WHERE r.id = ?
-		GROUP BY r.id
+		-- Removed GROUP BY
 	`, id).Scan(&r.ID, &created, &modified, &r.Name, &r.ToBeCompletedBy, &r.OwnerID, &owner.Name, &imageUrl)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -83,6 +84,8 @@ func GetRoutine(id int64) (*models.Routine, error) {
 	r.Owner = &owner
 	if imageUrl.Valid {
 		r.ImageUrl = imageUrl.String
+	} else {
+		r.ImageUrl = "" // Handle case where blueprint has no image or routine has no blueprint
 	}
 	return &r, nil
 }

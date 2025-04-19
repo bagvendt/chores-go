@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -40,7 +38,7 @@ func ChoresHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func listChores(w http.ResponseWriter, r *http.Request) {
-	chores, err := database.GetChores()
+	chores, err := database.GetChores(database.DB)
 	if err != nil {
 		http.Error(w, "Failed to load chores", http.StatusInternalServerError)
 		return
@@ -59,7 +57,7 @@ func choreDetail(w http.ResponseWriter, r *http.Request, idStr string) {
 		http.Error(w, "Invalid chore ID", http.StatusBadRequest)
 		return
 	}
-	chore, err := database.GetChore(id)
+	chore, err := database.GetChore(database.DB, id)
 	if err != nil {
 		http.Error(w, "Failed to load chore", http.StatusInternalServerError)
 		return
@@ -74,25 +72,6 @@ func choreDetail(w http.ResponseWriter, r *http.Request, idStr string) {
 	} else {
 		templates.AdminBase(content).Render(r.Context(), w)
 	}
-}
-
-// Helper function to get image filenames
-func getImageFiles() ([]string, error) {
-	files, err := os.ReadDir("static/img")
-	if err != nil {
-		return nil, err
-	}
-
-	var imageFiles []string
-	for _, file := range files {
-		if !file.IsDir() {
-			ext := strings.ToLower(filepath.Ext(file.Name()))
-			if ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".gif" || ext == ".svg" {
-				imageFiles = append(imageFiles, file.Name())
-			}
-		}
-	}
-	return imageFiles, nil
 }
 
 func newChore(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +106,7 @@ func createChore(w http.ResponseWriter, r *http.Request) {
 		DefaultPoints: atoiOrZero(r.FormValue("default_points")),
 		Image:         r.FormValue("image"),
 	}
-	if err := database.CreateChore(chore); err != nil {
+	if err := database.CreateChore(database.DB, chore); err != nil {
 		http.Error(w, "Failed to create chore", http.StatusInternalServerError)
 		return
 	}
@@ -144,7 +123,7 @@ func editChore(w http.ResponseWriter, r *http.Request, idStr string) {
 		http.Error(w, "Invalid chore ID", http.StatusBadRequest)
 		return
 	}
-	chore, err := database.GetChore(id)
+	chore, err := database.GetChore(database.DB, id)
 	if err != nil {
 		http.Error(w, "Failed to load chore", http.StatusInternalServerError)
 		return
@@ -161,7 +140,7 @@ func editChore(w http.ResponseWriter, r *http.Request, idStr string) {
 		chore.Name = r.FormValue("name")
 		chore.DefaultPoints = atoiOrZero(r.FormValue("default_points"))
 		chore.Image = r.FormValue("image")
-		if err := database.UpdateChore(chore); err != nil {
+		if err := database.UpdateChore(database.DB, chore); err != nil {
 			http.Error(w, "Failed to update chore", http.StatusInternalServerError)
 			return
 		}
@@ -194,7 +173,7 @@ func deleteChore(w http.ResponseWriter, r *http.Request, idStr string) {
 		http.Error(w, "Invalid chore ID", http.StatusBadRequest)
 		return
 	}
-	if err := database.DeleteChore(id); err != nil {
+	if err := database.DeleteChore(database.DB, id); err != nil {
 		http.Error(w, "Failed to delete chore", http.StatusInternalServerError)
 		return
 	}

@@ -13,8 +13,9 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	// Fetch routines
-	routines, err := database.GetRoutines()
+	// Fetch routines for a specific user (e.g., user ID 1 for now)
+	// TODO: Replace '1' with actual user ID from session/context
+	routines, err := database.GetRoutines(database.DB, 1)
 	if err != nil {
 		// Handle error appropriately, maybe show an error page or log
 		http.Error(w, "Failed to load routines", http.StatusInternalServerError)

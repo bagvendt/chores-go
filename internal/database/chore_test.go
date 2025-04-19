@@ -38,7 +38,7 @@ func TestChoreOperations(t *testing.T) {
 		Image:         "test.jpg",
 	}
 
-	err = CreateChore(testChore)
+	err = CreateChore(db, testChore)
 	if err != nil {
 		t.Fatalf("Failed to create chore: %v", err)
 	}
@@ -48,7 +48,7 @@ func TestChoreOperations(t *testing.T) {
 	}
 
 	// Test GetChore
-	chore, err := GetChore(testChore.ID)
+	chore, err := GetChore(db, testChore.ID)
 	if err != nil {
 		t.Fatalf("Failed to get chore: %v", err)
 	}
@@ -70,13 +70,13 @@ func TestChoreOperations(t *testing.T) {
 	testChore.Name = updatedName
 	testChore.DefaultPoints = 15
 
-	err = UpdateChore(testChore)
+	err = UpdateChore(db, testChore)
 	if err != nil {
 		t.Fatalf("Failed to update chore: %v", err)
 	}
 
 	// Verify update
-	updatedChore, err := GetChore(testChore.ID)
+	updatedChore, err := GetChore(db, testChore.ID)
 	if err != nil {
 		t.Fatalf("Failed to get updated chore: %v", err)
 	}
@@ -96,13 +96,13 @@ func TestChoreOperations(t *testing.T) {
 		DefaultPoints: 5,
 	}
 
-	err = CreateChore(secondChore)
+	err = CreateChore(db, secondChore)
 	if err != nil {
 		t.Fatalf("Failed to create second chore: %v", err)
 	}
 
 	// Get all chores
-	chores, err := GetChores()
+	chores, err := GetChores(db)
 	if err != nil {
 		t.Fatalf("Failed to get chores: %v", err)
 	}
@@ -112,13 +112,13 @@ func TestChoreOperations(t *testing.T) {
 	}
 
 	// Test DeleteChore
-	err = DeleteChore(testChore.ID)
+	err = DeleteChore(db, testChore.ID)
 	if err != nil {
 		t.Fatalf("Failed to delete chore: %v", err)
 	}
 
 	// Verify deletion
-	deletedChores, err := GetChores()
+	deletedChores, err := GetChores(db)
 	if err != nil {
 		t.Fatalf("Failed to get chores after deletion: %v", err)
 	}
@@ -164,13 +164,13 @@ func TestChoreNullableImage(t *testing.T) {
 		// No image
 	}
 
-	err = CreateChore(testChore)
+	err = CreateChore(db, testChore)
 	if err != nil {
 		t.Fatalf("Failed to create chore: %v", err)
 	}
 
 	// Test GetChore
-	chore, err := GetChore(testChore.ID)
+	chore, err := GetChore(db, testChore.ID)
 	if err != nil {
 		t.Fatalf("Failed to get chore: %v", err)
 	}
@@ -181,13 +181,13 @@ func TestChoreNullableImage(t *testing.T) {
 
 	// Test update from no image to image
 	testChore.Image = "new_image.jpg"
-	err = UpdateChore(testChore)
+	err = UpdateChore(db, testChore)
 	if err != nil {
 		t.Fatalf("Failed to update chore with image: %v", err)
 	}
 
 	// Verify update
-	updatedChore, err := GetChore(testChore.ID)
+	updatedChore, err := GetChore(db, testChore.ID)
 	if err != nil {
 		t.Fatalf("Failed to get updated chore: %v", err)
 	}
@@ -198,13 +198,13 @@ func TestChoreNullableImage(t *testing.T) {
 
 	// Test update from image to no image
 	testChore.Image = ""
-	err = UpdateChore(testChore)
+	err = UpdateChore(db, testChore)
 	if err != nil {
 		t.Fatalf("Failed to update chore removing image: %v", err)
 	}
 
 	// Verify update
-	updatedChore, err = GetChore(testChore.ID)
+	updatedChore, err = GetChore(db, testChore.ID)
 	if err != nil {
 		t.Fatalf("Failed to get updated chore: %v", err)
 	}

@@ -3,6 +3,8 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -10,6 +12,27 @@ import (
 	"github.com/bagvendt/chores/internal/models"
 	"github.com/bagvendt/chores/internal/templates"
 )
+
+// getImageFiles reads the static/img directory and returns a list of image filenames.
+func getImageFiles() ([]string, error) {
+	var files []string
+	imgDir := "./static/img"
+	items, err := os.ReadDir(imgDir)
+	if err != nil {
+		log.Printf("Error reading image directory %s: %v", imgDir, err)
+		return nil, err
+	}
+
+	for _, item := range items {
+		if !item.IsDir() {
+			ext := filepath.Ext(item.Name())
+			if ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".gif" || ext == ".svg" {
+				files = append(files, item.Name())
+			}
+		}
+	}
+	return files, nil
+}
 
 func BlueprintsHandler(w http.ResponseWriter, r *http.Request) {
 	// Strip prefix to get the path
@@ -39,7 +62,7 @@ func BlueprintsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func listBlueprints(w http.ResponseWriter, r *http.Request) {
-	blueprints, err := database.GetBlueprints()
+	blueprints, err := database.GetBlueprints(database.DB)
 	if err != nil {
 		http.Error(w, "Failed to load blueprints", http.StatusInternalServerError)
 		return
@@ -73,7 +96,7 @@ func getBlueprintDetail(w http.ResponseWriter, r *http.Request, idStr string) {
 		return
 	}
 
-	blueprint, chores, err := database.GetBlueprint(id)
+	blueprint, chores, err := database.GetBlueprint(database.DB, id)
 	if err != nil {
 		log.Printf("Failed to load blueprint (ID: %d): %v", id, err)
 		http.Error(w, "Failed to load blueprint", http.StatusInternalServerError)
@@ -92,14 +115,23 @@ func getBlueprintDetail(w http.ResponseWriter, r *http.Request, idStr string) {
 }
 
 func newBlueprint(w http.ResponseWriter, r *http.Request) {
-	chores, err := database.GetChores()
+	chores, err := database.GetChores(database.DB)
 	if err != nil {
 		http.Error(w, "Failed to load chores", http.StatusInternalServerError)
 		return
 	}
 
+	imageFiles, err := getImageFiles()
+	if err != nil {
+		// Log the error but continue, maybe show a message in the form?
+		log.Printf("Warning: Failed to load image files: %v", err)
+		// Or return an error response:
+		// http.Error(w, "Failed to load image files", http.StatusInternalServerError)
+		// return
+	}
+
 	blueprint := &models.RoutineBlueprint{}
-	content := templates.BlueprintForm(blueprint, chores)
+	content := templates.BlueprintForm(blueprint, chores, imageFiles)
 	if r.Header.Get("HX-Request") == "true" {
 		content.Render(r.Context(), w)
 	} else {
@@ -114,7 +146,7 @@ func editBlueprint(w http.ResponseWriter, r *http.Request, idStr string) {
 		return
 	}
 
-	blueprint, _, err := database.GetBlueprint(id)
+	blueprint, _, err := database.GetBlueprint(database.DB, id)
 	if err != nil {
 		http.Error(w, "Failed to load blueprint", http.StatusInternalServerError)
 		return
@@ -124,13 +156,19 @@ func editBlueprint(w http.ResponseWriter, r *http.Request, idStr string) {
 		return
 	}
 
-	chores, err := database.GetChores()
+	chores, err := database.GetChores(database.DB)
 	if err != nil {
 		http.Error(w, "Failed to load chores", http.StatusInternalServerError)
 		return
 	}
 
-	content := templates.BlueprintForm(blueprint, chores)
+	imageFiles, err := getImageFiles()
+	if err != nil {
+		log.Printf("Warning: Failed to load image files: %v", err)
+		// Continue without images rather than failing completely
+	}
+
+	content := templates.BlueprintForm(blueprint, chores, imageFiles)
 	if r.Header.Get("HX-Request") == "true" {
 		content.Render(r.Context(), w)
 	} else {
@@ -156,6 +194,7 @@ func updateBlueprint(w http.ResponseWriter, r *http.Request, idStr string) {
 		ToBeCompletedBy:              r.FormValue("to_be_completed_by"),
 		AllowMultipleInstancesPerDay: r.FormValue("allow_multiple_instances_per_day") == "on",
 		Recurrence:                   models.RecurrenceType(r.FormValue("recurrence")),
+		Image:                        r.FormValue("image"),
 	}
 
 	// Get selected chores
@@ -168,9 +207,9 @@ func updateBlueprint(w http.ResponseWriter, r *http.Request, idStr string) {
 
 	var saveErr error
 	if id == 0 {
-		saveErr = database.CreateBlueprint(blueprint, choreIDs)
+		saveErr = database.CreateBlueprint(database.DB, blueprint, choreIDs)
 	} else {
-		saveErr = database.UpdateBlueprint(blueprint, choreIDs)
+		saveErr = database.UpdateBlueprint(database.DB, blueprint, choreIDs)
 	}
 
 	if saveErr != nil {
@@ -194,7 +233,7 @@ func deleteBlueprint(w http.ResponseWriter, r *http.Request, idStr string) {
 		return
 	}
 
-	if err := database.DeleteBlueprint(id); err != nil {
+	if err := database.DeleteBlueprint(database.DB, id); err != nil {
 		log.Printf("Error deleting blueprint (ID: %d): %v", id, err)
 		http.Error(w, "Failed to delete blueprint", http.StatusInternalServerError)
 		return
@@ -219,6 +258,7 @@ func createBlueprint(w http.ResponseWriter, r *http.Request) {
 		ToBeCompletedBy:              r.FormValue("to_be_completed_by"),
 		AllowMultipleInstancesPerDay: r.FormValue("allow_multiple_instances_per_day") == "on",
 		Recurrence:                   models.RecurrenceType(r.FormValue("recurrence")),
+		Image:                        r.FormValue("image"),
 	}
 	// Get selected chores
 	choreIDs := []int64{}
@@ -228,7 +268,7 @@ func createBlueprint(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	// Save new blueprint
-	if err := database.CreateBlueprint(blueprint, choreIDs); err != nil {
+	if err := database.CreateBlueprint(database.DB, blueprint, choreIDs); err != nil {
 		log.Printf("Error creating blueprint: %v", err)
 		http.Error(w, "Failed to create blueprint", http.StatusInternalServerError)
 		return

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -26,8 +27,10 @@ func RoutinesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func listRoutines(w http.ResponseWriter, r *http.Request) {
-	routines, err := database.GetRoutines()
+	// TODO: Replace '1' with actual user ID
+	routines, err := database.GetRoutines(database.DB, 1)
 	if err != nil {
+		log.Printf("Failed to load routines: %v", err)
 		http.Error(w, "Failed to load routines", http.StatusInternalServerError)
 		return
 	}
@@ -47,7 +50,7 @@ func routineDetail(w http.ResponseWriter, r *http.Request, idStr string) {
 		return
 	}
 
-	routine, err := database.GetRoutine(id)
+	routine, err := database.GetRoutine(database.DB, id)
 	if err != nil {
 		http.Error(w, "Failed to load routine", http.StatusInternalServerError)
 		return
@@ -62,7 +65,8 @@ func routineDetail(w http.ResponseWriter, r *http.Request, idStr string) {
 		templates.RoutineDetail(routine).Render(r.Context(), w)
 	} else {
 		// For regular requests, render the full page with the routine list
-		routines, err := database.GetRoutines()
+		// TODO: Replace '1' with actual user ID
+		routines, err := database.GetRoutines(database.DB, 1)
 		if err != nil {
 			http.Error(w, "Failed to load routines", http.StatusInternalServerError)
 			return

@@ -1,14 +1,15 @@
 package database
 
 import (
-	"github.com/bagvendt/chores/internal/models"
 	"database/sql"
 	"time"
+
+	"github.com/bagvendt/chores/internal/models"
 )
 
 // GetChores returns all chores from the database
-func GetChores() ([]models.Chore, error) {
-	rows, err := DB.Query(`
+func GetChores(db *sql.DB) ([]models.Chore, error) {
+	rows, err := db.Query(`
 		SELECT id, created, modified, name, default_points, image
 		FROM chores
 		ORDER BY name
@@ -48,12 +49,12 @@ func GetChores() ([]models.Chore, error) {
 }
 
 // GetChore returns a chore by ID
-func GetChore(id int64) (*models.Chore, error) {
+func GetChore(db *sql.DB, id int64) (*models.Chore, error) {
 	var chore models.Chore
 	var createdStr, modifiedStr string
 	var image sql.NullString
 
-	err := DB.QueryRow(`
+	err := db.QueryRow(`
 		SELECT id, created, modified, name, default_points, image
 		FROM chores
 		WHERE id = ?
@@ -79,9 +80,9 @@ func GetChore(id int64) (*models.Chore, error) {
 }
 
 // CreateChore creates a new chore in the database
-func CreateChore(chore *models.Chore) error {
+func CreateChore(db *sql.DB, chore *models.Chore) error {
 	now := time.Now().UTC().Format(time.RFC3339)
-	result, err := DB.Exec(`
+	result, err := db.Exec(`
 		INSERT INTO chores (created, modified, name, default_points, image)
 		VALUES (?, ?, ?, ?, ?)
 	`,
@@ -108,9 +109,9 @@ func CreateChore(chore *models.Chore) error {
 }
 
 // UpdateChore updates an existing chore in the database
-func UpdateChore(chore *models.Chore) error {
+func UpdateChore(db *sql.DB, chore *models.Chore) error {
 	now := time.Now().UTC().Format(time.RFC3339)
-	_, err := DB.Exec(`
+	_, err := db.Exec(`
 		UPDATE chores
 		SET modified = ?, name = ?, default_points = ?, image = ?
 		WHERE id = ?
@@ -130,7 +131,7 @@ func UpdateChore(chore *models.Chore) error {
 }
 
 // DeleteChore deletes a chore from the database
-func DeleteChore(id int64) error {
-	_, err := DB.Exec("DELETE FROM chores WHERE id = ?", id)
+func DeleteChore(db *sql.DB, id int64) error {
+	_, err := db.Exec("DELETE FROM chores WHERE id = ?", id)
 	return err
-} 
+}

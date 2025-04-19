@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS routine_blueprints (
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     to_be_completed_by TEXT NOT NULL,
+    image TEXT NOT Null,
     allow_multiple_instances_per_day BOOLEAN NOT NULL DEFAULT 0,
     recurrence TEXT CHECK (recurrence IN ('Daily', 'Weekly') OR recurrence IS NULL)
 );
@@ -41,7 +42,6 @@ CREATE TABLE IF NOT EXISTS routine_blueprint_chores (
     modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     routine_blueprint_id INTEGER NOT NULL,
     chore_id INTEGER NOT NULL,
-    image TEXT,
     FOREIGN KEY (routine_blueprint_id) REFERENCES routine_blueprints(id),
     FOREIGN KEY (chore_id) REFERENCES chores(id)
 );
@@ -54,7 +54,9 @@ CREATE TABLE IF NOT EXISTS routines (
     name TEXT NOT NULL,
     to_be_completed_by TEXT NOT NULL,
     owner_id INTEGER NOT NULL,
-    FOREIGN KEY (owner_id) REFERENCES users(id)
+    routine_blueprint_id INTEGER,
+    FOREIGN KEY (owner_id) REFERENCES users(id),
+    FOREIGN KEY (routine_blueprint_id) REFERENCES routine_blueprints(id)
 );
 
 -- Create chore_routines table
@@ -73,4 +75,4 @@ CREATE TABLE IF NOT EXISTS chore_routines (
 );
 
 -- Insert initial migration record
-INSERT INTO migrations (migration_id) VALUES (1); 
+INSERT INTO migrations (migration_id) VALUES (1);

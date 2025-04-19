@@ -8,9 +8,9 @@ import (
 )
 
 // GetBlueprints returns all routine blueprints
-func GetBlueprints() ([]models.RoutineBlueprint, error) {
-	rows, err := DB.Query(`
-		SELECT id, created, modified, name, to_be_completed_by, allow_multiple_instances_per_day, recurrence
+func GetBlueprints(db *sql.DB) ([]models.RoutineBlueprint, error) {
+	rows, err := db.Query(`
+		SELECT id, created, modified, name, to_be_completed_by, allow_multiple_instances_per_day, recurrence, image
 		FROM routine_blueprints
 		ORDER BY created DESC
 	`)
@@ -33,6 +33,7 @@ func GetBlueprints() ([]models.RoutineBlueprint, error) {
 			&blueprint.ToBeCompletedBy,
 			&blueprint.AllowMultipleInstancesPerDay,
 			&recurrence,
+			&blueprint.Image,
 		); err != nil {
 			return nil, err
 		}
@@ -48,14 +49,14 @@ func GetBlueprints() ([]models.RoutineBlueprint, error) {
 }
 
 // GetBlueprint returns a single routine blueprint by ID along with its chores
-func GetBlueprint(id int64) (*models.RoutineBlueprint, []models.RoutineBlueprintChore, error) {
+func GetBlueprint(db *sql.DB, id int64) (*models.RoutineBlueprint, []models.RoutineBlueprintChore, error) {
 	// Get the blueprint
 	var blueprint models.RoutineBlueprint
 	var createdStr, modifiedStr string
 	var recurrence string
 
-	err := DB.QueryRow(`
-		SELECT id, created, modified, name, to_be_completed_by, allow_multiple_instances_per_day, recurrence
+	err := db.QueryRow(`
+		SELECT id, created, modified, name, to_be_completed_by, allow_multiple_instances_per_day, recurrence, image
 		FROM routine_blueprints
 		WHERE id = ?
 	`, id).Scan(
@@ -66,6 +67,7 @@ func GetBlueprint(id int64) (*models.RoutineBlueprint, []models.RoutineBlueprint
 		&blueprint.ToBeCompletedBy,
 		&blueprint.AllowMultipleInstancesPerDay,
 		&recurrence,
+		&blueprint.Image,
 	)
 	if err != nil {
 		return nil, nil, err
@@ -76,9 +78,9 @@ func GetBlueprint(id int64) (*models.RoutineBlueprint, []models.RoutineBlueprint
 	blueprint.Recurrence = models.RecurrenceType(recurrence)
 
 	// Get the chores for this blueprint
-	rows, err := DB.Query(`
+	rows, err := db.Query(`
 		SELECT 
-			rbc.id, rbc.created, rbc.modified, rbc.routine_blueprint_id, rbc.chore_id, rbc.image,
+			rbc.id, rbc.created, rbc.modified, rbc.routine_blueprint_id, rbc.chore_id,
 			c.id, c.name, c.default_points, c.image
 		FROM routine_blueprint_chores rbc
 		JOIN chores c ON rbc.chore_id = c.id
@@ -93,7 +95,6 @@ func GetBlueprint(id int64) (*models.RoutineBlueprint, []models.RoutineBlueprint
 	for rows.Next() {
 		var chore models.RoutineBlueprintChore
 		var choreCreatedStr, choreModifiedStr string
-		var choreImage sql.NullString
 		var choreObj models.Chore
 		var choreObjImage sql.NullString
 
@@ -103,7 +104,6 @@ func GetBlueprint(id int64) (*models.RoutineBlueprint, []models.RoutineBlueprint
 			&choreModifiedStr,
 			&chore.RoutineBlueprintID,
 			&chore.ChoreID,
-			&choreImage,
 			&choreObj.ID,
 			&choreObj.Name,
 			&choreObj.DefaultPoints,
@@ -114,17 +114,13 @@ func GetBlueprint(id int64) (*models.RoutineBlueprint, []models.RoutineBlueprint
 
 		chore.Created, _ = time.Parse(time.RFC3339, choreCreatedStr)
 		chore.Modified, _ = time.Parse(time.RFC3339, choreModifiedStr)
-		if choreImage.Valid {
-			chore.Image = choreImage.String
-		} else {
-			chore.Image = ""
-		}
 		if choreObjImage.Valid {
 			choreObj.Image = choreObjImage.String
 		} else {
 			choreObj.Image = ""
 		}
 		chore.Chore = &choreObj
+		chore.Image = choreObj.Image // Set RBC image from Chore image
 
 		chores = append(chores, chore)
 	}
@@ -132,9 +128,61 @@ func GetBlueprint(id int64) (*models.RoutineBlueprint, []models.RoutineBlueprint
 	return &blueprint, chores, nil
 }
 
+// GetBlueprintChores retrieves all chores associated with a blueprint
+func GetBlueprintChores(db *sql.DB, blueprintID int64) ([]models.RoutineBlueprintChore, error) {
+	rows, err := db.Query(`
+		SELECT 
+			rbc.id, rbc.created, rbc.modified, rbc.routine_blueprint_id, rbc.chore_id,
+			c.id, c.name, c.default_points, c.image
+		FROM routine_blueprint_chores rbc
+		JOIN chores c ON rbc.chore_id = c.id
+		WHERE rbc.routine_blueprint_id = ?
+	`, blueprintID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var chores []models.RoutineBlueprintChore
+	for rows.Next() {
+		var chore models.RoutineBlueprintChore
+		var choreCreatedStr, choreModifiedStr string
+		var choreObj models.Chore
+		var choreObjImage sql.NullString
+
+		if err := rows.Scan(
+			&chore.ID,
+			&choreCreatedStr,
+			&choreModifiedStr,
+			&chore.RoutineBlueprintID,
+			&chore.ChoreID,
+			&choreObj.ID,
+			&choreObj.Name,
+			&choreObj.DefaultPoints,
+			&choreObjImage,
+		); err != nil {
+			return nil, err
+		}
+
+		chore.Created, _ = time.Parse(time.RFC3339, choreCreatedStr)
+		chore.Modified, _ = time.Parse(time.RFC3339, choreModifiedStr)
+		if choreObjImage.Valid {
+			choreObj.Image = choreObjImage.String
+		} else {
+			choreObj.Image = ""
+		}
+		chore.Chore = &choreObj
+		chore.Image = choreObj.Image // Set RBC image from Chore image
+
+		chores = append(chores, chore)
+	}
+
+	return chores, nil
+}
+
 // CreateBlueprint creates a new routine blueprint
-func CreateBlueprint(blueprint *models.RoutineBlueprint, choreIDs []int64) error {
-	tx, err := DB.Begin()
+func CreateBlueprint(db *sql.DB, blueprint *models.RoutineBlueprint, choreIDs []int64) error {
+	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
@@ -145,13 +193,15 @@ func CreateBlueprint(blueprint *models.RoutineBlueprint, choreIDs []int64) error
 			name,
 			to_be_completed_by, 
 			allow_multiple_instances_per_day,
-			recurrence
-		) VALUES (?, ?, ?, ?)
+			recurrence,
+			image
+		) VALUES (?, ?, ?, ?, ?)
 	`,
 		blueprint.Name,
 		blueprint.ToBeCompletedBy,
 		blueprint.AllowMultipleInstancesPerDay,
 		string(blueprint.Recurrence),
+		blueprint.Image,
 	)
 	if err != nil {
 		return err
@@ -183,8 +233,8 @@ func CreateBlueprint(blueprint *models.RoutineBlueprint, choreIDs []int64) error
 }
 
 // UpdateBlueprint updates an existing routine blueprint
-func UpdateBlueprint(blueprint *models.RoutineBlueprint, choreIDs []int64) error {
-	tx, err := DB.Begin()
+func UpdateBlueprint(db *sql.DB, blueprint *models.RoutineBlueprint, choreIDs []int64) error {
+	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
@@ -197,6 +247,7 @@ func UpdateBlueprint(blueprint *models.RoutineBlueprint, choreIDs []int64) error
 			to_be_completed_by = ?,
 			allow_multiple_instances_per_day = ?,
 			recurrence = ?,
+			image = ?,
 			modified = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`,
@@ -204,6 +255,7 @@ func UpdateBlueprint(blueprint *models.RoutineBlueprint, choreIDs []int64) error
 		blueprint.ToBeCompletedBy,
 		blueprint.AllowMultipleInstancesPerDay,
 		string(blueprint.Recurrence),
+		blueprint.Image,
 		blueprint.ID,
 	)
 	if err != nil {
@@ -236,8 +288,8 @@ func UpdateBlueprint(blueprint *models.RoutineBlueprint, choreIDs []int64) error
 }
 
 // DeleteBlueprint deletes a routine blueprint and its associated chores
-func DeleteBlueprint(id int64) error {
-	tx, err := DB.Begin()
+func DeleteBlueprint(db *sql.DB, id int64) error {
+	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}

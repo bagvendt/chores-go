@@ -6,8 +6,9 @@ import "time"
 type RecurrenceType string
 
 const (
-	Daily  RecurrenceType = "Daily"
-	Weekly RecurrenceType = "Weekly"
+	Daily   RecurrenceType = "Daily"
+	Weekly  RecurrenceType = "Weekly"
+	Weekday RecurrenceType = "Weekday"
 )
 
 type RoutineBlueprint struct {
@@ -18,4 +19,5 @@ type RoutineBlueprint struct {
 	ToBeCompletedBy              string         `json:"to_be_completed_by"`
 	AllowMultipleInstancesPerDay bool           `json:"allow_multiple_instances_per_day"`
 	Recurrence                   RecurrenceType `json:"recurrence,omitempty"`
+	Image                        string         `json:"image,omitempty"`
 }

@@ -76,14 +76,14 @@ If 2 fails then do not apply 3.
 - Modified datetime
 - to_be_completed_by: time_of_day
 - allow_multiple_instances_per_day
-- Recurrence: Nullable enum. Daily, Weekly
+- Recurrence: Nullable enum. Daily, Weekly, Weekday
 
 
 ### Routine Blueprint Chore
 - ID Int Primary key
 - Created datetime
 - Modified datetime
-- FK to routine template
+- FK to routine blueprint
 - FK to chore
 - Image : str
 

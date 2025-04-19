@@ -9,7 +9,7 @@ type RoutineBlueprintChore struct {
 	RoutineBlueprintID int64     `json:"routine_blueprint_id"`
 	ChoreID            int64     `json:"chore_id"`
 	Image              string    `json:"image,omitempty"`
-	
+
 	// These fields are not stored in the database but can be populated for convenience
-	Chore              *Chore    `json:"chore,omitempty"`
-} 
+	Chore *Chore `json:"chore,omitempty"`
+}
