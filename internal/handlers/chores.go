@@ -45,7 +45,7 @@ func listChores(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("HX-Request") == "true" {
 		content.Render(r.Context(), w)
 	} else {
-		templates.Main(content).Render(r.Context(), w)
+		templates.AdminBase(content).Render(r.Context(), w)
 	}
 }
 
@@ -68,7 +68,7 @@ func choreDetail(w http.ResponseWriter, r *http.Request, idStr string) {
 	if r.Header.Get("HX-Request") == "true" {
 		content.Render(r.Context(), w)
 	} else {
-		templates.Main(content).Render(r.Context(), w)
+		templates.AdminBase(content).Render(r.Context(), w)
 	}
 }
 
@@ -82,7 +82,7 @@ func newChore(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("HX-Request") == "true" {
 		content.Render(r.Context(), w)
 	} else {
-		templates.Main(content).Render(r.Context(), w)
+		templates.AdminBase(content).Render(r.Context(), w)
 	}
 }
 
@@ -145,7 +145,7 @@ func editChore(w http.ResponseWriter, r *http.Request, idStr string) {
 	if r.Header.Get("HX-Request") == "true" {
 		content.Render(r.Context(), w)
 	} else {
-		templates.Main(content).Render(r.Context(), w)
+		templates.AdminBase(content).Render(r.Context(), w)
 	}
 }
 

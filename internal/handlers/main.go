@@ -8,7 +8,7 @@ import (
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
 	content := templates.MainContent()
-	templates.Main(content).Render(r.Context(), w)
+	templates.AdminBase(content).Render(r.Context(), w)
 }
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {

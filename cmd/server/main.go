@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/bagvendt/chores/internal/database"
 	"github.com/bagvendt/chores/internal/handlers"
@@ -22,6 +23,10 @@ func main() {
 	http.HandleFunc("/admin/blueprints/", handlers.BlueprintsHandler)
 	http.HandleFunc("/admin/chores", handlers.ChoresHandler)
 	http.HandleFunc("/admin/chores/", handlers.ChoresHandler)
+
+	// Serve static files
+	fs := http.FileServer(http.Dir(filepath.Join(".", "static")))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	log.Println("Server is starting on port 8080...")
 	err := http.ListenAndServe(":8080", nil)
