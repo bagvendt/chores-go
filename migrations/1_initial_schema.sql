@@ -73,6 +73,3 @@ CREATE TABLE IF NOT EXISTS chore_routines (
     FOREIGN KEY (routine_id) REFERENCES routines(id),
     FOREIGN KEY (chore_id) REFERENCES chores(id)
 );
-
--- Insert initial migration record
-INSERT INTO migrations (migration_id) VALUES (1);
