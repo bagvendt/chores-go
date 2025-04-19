@@ -11,9 +11,9 @@ templ BlueprintForm(blueprint *models.RoutineBlueprint, chores []models.Chore) {
 			id="blueprint-form"
 			hx-post={ func() string {
 				if blueprint.ID == 0 {
-					return "/blueprints/"
+					return "/admin/blueprints/"
 				}
-				return fmt.Sprintf("/blueprints/%d", blueprint.ID)
+				return fmt.Sprintf("/admin/blueprints/%d", blueprint.ID)
 			}() }
 			hx-target="body"
 		>
@@ -61,7 +61,7 @@ templ BlueprintForm(blueprint *models.RoutineBlueprint, chores []models.Chore) {
 			</div>
 			<div class="form-actions">
 				<button type="submit" class="save-button">Save Blueprint</button>
-				<button type="button" class="cancel-button" hx-get="/blueprints">Cancel</button>
+				<button type="button" class="cancel-button" hx-get="/admin/blueprints">Cancel</button>
 			</div>
 		</form>
 	</div>
@@ -189,10 +189,10 @@ templ BlueprintDetail(blueprint *models.RoutineBlueprint, chores []models.Routin
 			}
 		</div>
 		<div class="blueprint-actions">
-			<button class="edit-button" hx-get={ fmt.Sprintf("/blueprints/%d/edit", blueprint.ID) } hx-target="body">
+			<button class="edit-button" hx-get={ fmt.Sprintf("/admin/blueprints/%d/edit", blueprint.ID) } hx-target="body">
 				Edit Blueprint
 			</button>
-			<button class="delete-button" hx-delete={ fmt.Sprintf("/blueprints/%d", blueprint.ID) } hx-confirm="Are you sure you want to delete this blueprint?">
+			<button class="delete-button" hx-delete={ fmt.Sprintf("/admin/blueprints/%d", blueprint.ID) } hx-confirm="Are you sure you want to delete this blueprint?">
 				Delete
 			</button>
 		</div>

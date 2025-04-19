@@ -16,7 +16,7 @@ templ Chores(chores []models.Chore) {
 				<ul class="chore-items">
 					for _, chore := range chores {
 						<li class="chore-item">
-							<a href={ templ.SafeURL(fmt.Sprintf("/chores/%d", chore.ID)) }>
+							<a href={ templ.SafeURL(fmt.Sprintf("/admin/chores/%d", chore.ID)) }>
 								<h3>{ chore.Name }</h3>
 								<p class="chore-details">{ strconv.Itoa(chore.DefaultPoints) } points</p>
 							</a>
@@ -24,7 +24,7 @@ templ Chores(chores []models.Chore) {
 					}
 				</ul>
 			}
-			<button class="create-button" hx-get="/chores/new" hx-target=".detail-view">
+			<button class="create-button" hx-get="/admin/chores/new" hx-target=".detail-view">
 				Create New Chore
 			</button>
 		</div>

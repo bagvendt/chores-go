@@ -15,10 +15,10 @@ templ RoutineDetail(routine *models.Routine) {
 				</div>
 			</div>
 			<div class="routine-actions">
-				<button class="edit-button" hx-get={ "/routines/" + string(routine.ID) + "/edit" } hx-target=".detail-view">
+				<button class="edit-button" hx-get={ "/admin/routines/" + string(routine.ID) + "/edit" } hx-target=".detail-view">
 					Edit Routine
 				</button>
-				<button class="delete-button" hx-delete={ "/routines/" + string(routine.ID) } hx-confirm="Are you sure you want to delete this routine?">
+				<button class="delete-button" hx-delete={ "/admin/routines/" + string(routine.ID) } hx-confirm="Are you sure you want to delete this routine?">
 					Delete
 				</button>
 			</div>

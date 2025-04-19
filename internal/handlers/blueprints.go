@@ -181,9 +181,9 @@ func updateBlueprint(w http.ResponseWriter, r *http.Request, idStr string) {
 
 	// Redirect to blueprint list
 	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", "/blueprints")
+		w.Header().Set("HX-Redirect", "/admin/blueprints")
 	} else {
-		http.Redirect(w, r, "/blueprints", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/blueprints", http.StatusSeeOther)
 	}
 }
 
@@ -202,9 +202,9 @@ func deleteBlueprint(w http.ResponseWriter, r *http.Request, idStr string) {
 
 	// Redirect to blueprint list
 	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", "/blueprints")
+		w.Header().Set("HX-Redirect", "/admin/blueprints")
 	} else {
-		http.Redirect(w, r, "/blueprints", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/blueprints", http.StatusSeeOther)
 	}
 }
 
@@ -235,8 +235,8 @@ func createBlueprint(w http.ResponseWriter, r *http.Request) {
 	}
 	// Redirect to blueprint list
 	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", "/blueprints")
+		w.Header().Set("HX-Redirect", "/admin/blueprints")
 	} else {
-		http.Redirect(w, r, "/blueprints", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/blueprints", http.StatusSeeOther)
 	}
 }

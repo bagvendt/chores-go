@@ -2,8 +2,12 @@ package handlers
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+
+	"log"
 
 	"github.com/bagvendt/chores/internal/database"
 	"github.com/bagvendt/chores/internal/models"
@@ -72,13 +76,40 @@ func choreDetail(w http.ResponseWriter, r *http.Request, idStr string) {
 	}
 }
 
+// Helper function to get image filenames
+func getImageFiles() ([]string, error) {
+	files, err := os.ReadDir("static/img")
+	if err != nil {
+		return nil, err
+	}
+
+	var imageFiles []string
+	for _, file := range files {
+		if !file.IsDir() {
+			ext := strings.ToLower(filepath.Ext(file.Name()))
+			if ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".gif" || ext == ".svg" {
+				imageFiles = append(imageFiles, file.Name())
+			}
+		}
+	}
+	return imageFiles, nil
+}
+
 func newChore(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		createChore(w, r)
 		return
 	}
 	chore := &models.Chore{}
-	content := templates.ChoreForm(chore)
+
+	imageFiles, err := getImageFiles()
+	if err != nil {
+		log.Printf("Error getting image files: %v", err)
+		http.Error(w, "Failed to load image options", http.StatusInternalServerError)
+		return
+	}
+
+	content := templates.ChoreForm(chore, imageFiles)
 	if r.Header.Get("HX-Request") == "true" {
 		content.Render(r.Context(), w)
 	} else {
@@ -101,9 +132,9 @@ func createChore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", "/chores")
+		w.Header().Set("HX-Redirect", "/admin/chores")
 	} else {
-		http.Redirect(w, r, "/chores", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/chores", http.StatusSeeOther)
 	}
 }
 
@@ -135,13 +166,21 @@ func editChore(w http.ResponseWriter, r *http.Request, idStr string) {
 			return
 		}
 		if r.Header.Get("HX-Request") == "true" {
-			w.Header().Set("HX-Redirect", "/chores")
+			w.Header().Set("HX-Redirect", "/admin/chores")
 		} else {
-			http.Redirect(w, r, "/chores", http.StatusSeeOther)
+			http.Redirect(w, r, "/admin/chores", http.StatusSeeOther)
 		}
 		return
 	}
-	content := templates.ChoreForm(chore)
+
+	imageFiles, err := getImageFiles()
+	if err != nil {
+		log.Printf("Error getting image files: %v", err)
+		http.Error(w, "Failed to load image options", http.StatusInternalServerError)
+		return
+	}
+
+	content := templates.ChoreForm(chore, imageFiles)
 	if r.Header.Get("HX-Request") == "true" {
 		content.Render(r.Context(), w)
 	} else {
@@ -160,9 +199,9 @@ func deleteChore(w http.ResponseWriter, r *http.Request, idStr string) {
 		return
 	}
 	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", "/chores")
+		w.Header().Set("HX-Redirect", "/admin/chores")
 	} else {
-		http.Redirect(w, r, "/chores", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/chores", http.StatusSeeOther)
 	}
 }
 
