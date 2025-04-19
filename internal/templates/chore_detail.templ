@@ -1,0 +1,24 @@
+package templates
+
+import (
+	"github.com/bagvendt/chores/internal/models"
+	"strconv"
+)
+
+templ ChoreDetail(chore *models.Chore) {
+	<div class="chore-detail">
+		<h2>{ chore.Name }</h2>
+		<p>Points: { strconv.Itoa(chore.DefaultPoints) }</p>
+		if chore.Image != "" {
+			<img src={ chore.Image } alt="Chore image" style="max-width: 200px;"/>
+		}
+		<div class="chore-actions">
+			<button class="edit-button" hx-get={ "/chores/" + strconv.FormatInt(chore.ID, 10) + "/edit" } hx-target=".detail-view">
+				Edit Chore
+			</button>
+			<button class="delete-button" hx-delete={ "/chores/" + strconv.FormatInt(chore.ID, 10) } hx-confirm="Are you sure you want to delete this chore?">
+				Delete
+			</button>
+		</div>
+	</div>
+}

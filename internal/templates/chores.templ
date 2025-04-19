@@ -1,0 +1,35 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/bagvendt/chores/internal/models"
+	"strconv"
+)
+
+templ Chores(chores []models.Chore) {
+	<div class="chores-container">
+		<div class="chores-list">
+			<h2>Chores</h2>
+			if len(chores) == 0 {
+				<p>No chores yet. Create your first chore!</p>
+			} else {
+				<ul class="chore-items">
+					for _, chore := range chores {
+						<li class="chore-item">
+							<a href={ templ.SafeURL(fmt.Sprintf("/chores/%d", chore.ID)) }>
+								<h3>{ chore.Name }</h3>
+								<p class="chore-details">{ strconv.Itoa(chore.DefaultPoints) } points</p>
+							</a>
+						</li>
+					}
+				</ul>
+			}
+			<button class="create-button" hx-get="/chores/new" hx-target=".detail-view">
+				Create New Chore
+			</button>
+		</div>
+		<div class="detail-view">
+			<p>Select a chore to view details</p>
+		</div>
+	</div>
+}

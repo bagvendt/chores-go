@@ -1,0 +1,29 @@
+package templates
+
+import (
+	"github.com/bagvendt/chores/internal/models"
+	"strconv"
+)
+
+templ ChoreForm(chore *models.Chore) {
+	<div class="chore-form">
+		<form method="post">
+			<div class="form-group">
+				<label for="name">Name</label>
+				<input type="text" id="name" name="name" value={ chore.Name } required />
+			</div>
+			<div class="form-group">
+				<label for="default_points">Default Points</label>
+				<input type="number" id="default_points" name="default_points" value={ strconv.Itoa(chore.DefaultPoints) } min="1" required />
+			</div>
+			<div class="form-group">
+				<label for="image">Image URL</label>
+				<input type="text" id="image" name="image" value={ chore.Image } />
+			</div>
+			<div class="form-actions">
+				<button type="submit" class="save-button">Save Chore</button>
+				<button type="button" class="cancel-button" hx-get="/chores" hx-target="body">Cancel</button>
+			</div>
+		</form>
+	</div>
+}
