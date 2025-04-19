@@ -7,7 +7,7 @@ templ Home(routines []models.Routine) {
         if len(routines) == 0 {
             <p>No routines available. Create some routines first!</p>
         } else {
-            <div class="routines-grid">
+            <div class="routines-list">
                 for _, routine := range routines {
                     @RoutineCard(routine)
                 }

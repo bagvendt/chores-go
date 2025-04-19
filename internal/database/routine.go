@@ -10,14 +10,13 @@ import (
 // GetRoutines retrieves all routines from the database for a specific user
 func GetRoutines(db *sql.DB, userID int64) ([]models.Routine, error) {
 	rows, err := db.Query(`
-		SELECT r.id, r.created, r.modified, r.name, r.to_be_completed_by, r.owner_id,
+		SELECT r.id, r.created, r.modified, r.owner_id,
 		       u.name as owner_name, 
 		       rb.image as image_url -- Get image from routine_blueprints
 		FROM routines r
 		LEFT JOIN users u ON r.owner_id = u.id
 		LEFT JOIN routine_blueprints rb ON r.routine_blueprint_id = rb.id -- Join routine_blueprints
 		WHERE r.owner_id = ?
-		-- Removed GROUP BY as it's not needed without aggregating chore data here
 		ORDER BY r.created DESC
 	`, userID)
 	if err != nil {
@@ -30,16 +29,14 @@ func GetRoutines(db *sql.DB, userID int64) ([]models.Routine, error) {
 		var r models.Routine
 		var owner models.User
 		var created, modified string
-		var imageUrl sql.NullString // Changed from rbc.image to rb.image
+		var imageUrl sql.NullString
 		err := rows.Scan(
 			&r.ID,
 			&created,
 			&modified,
-			&r.Name,
-			&r.ToBeCompletedBy,
 			&r.OwnerID,
 			&owner.Name,
-			&imageUrl, // Scan the image URL from rb.image
+			&imageUrl,
 		)
 		if err != nil {
 			return nil, err
@@ -50,7 +47,7 @@ func GetRoutines(db *sql.DB, userID int64) ([]models.Routine, error) {
 		if imageUrl.Valid {
 			r.ImageUrl = imageUrl.String
 		} else {
-			r.ImageUrl = "" // Handle case where blueprint has no image or routine has no blueprint
+			r.ImageUrl = ""
 		}
 		routines = append(routines, r)
 	}
@@ -64,15 +61,14 @@ func GetRoutine(db *sql.DB, id int64) (*models.Routine, error) {
 	var created, modified string
 	var imageUrl sql.NullString
 	err := db.QueryRow(`
-		SELECT r.id, r.created, r.modified, r.name, r.to_be_completed_by, r.owner_id,
+		SELECT r.id, r.created, r.modified, r.owner_id,
 		       u.name as owner_name, 
 		       rb.image as image_url -- Get image from routine_blueprints
 		FROM routines r
 		LEFT JOIN users u ON r.owner_id = u.id
 		LEFT JOIN routine_blueprints rb ON r.routine_blueprint_id = rb.id -- Join routine_blueprints
 		WHERE r.id = ?
-		-- Removed GROUP BY
-	`, id).Scan(&r.ID, &created, &modified, &r.Name, &r.ToBeCompletedBy, &r.OwnerID, &owner.Name, &imageUrl)
+	`, id).Scan(&r.ID, &created, &modified, &r.OwnerID, &owner.Name, &imageUrl)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -85,7 +81,7 @@ func GetRoutine(db *sql.DB, id int64) (*models.Routine, error) {
 	if imageUrl.Valid {
 		r.ImageUrl = imageUrl.String
 	} else {
-		r.ImageUrl = "" // Handle case where blueprint has no image or routine has no blueprint
+		r.ImageUrl = ""
 	}
 	return &r, nil
 }

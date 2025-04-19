@@ -2,7 +2,6 @@ package services
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/bagvendt/chores/internal/database"
 	"github.com/bagvendt/chores/internal/models"
@@ -41,13 +40,11 @@ func (s *RoutineService) GetRoutinesToDisplay(userID int64) ([]models.Displayabl
 	// Convert database routines to DisplayableRoutine
 	for _, routine := range dbRoutines {
 		displayable := models.DisplayableRoutine{
-			ID:              routine.ID,
-			Name:            routine.Name,
-			ToBeCompletedBy: routine.ToBeCompletedBy,
-			ImageUrl:        routine.ImageUrl,
-			OwnerID:         routine.OwnerID,
-			Owner:           routine.Owner,
-			SourceType:      models.DatabaseSource,
+			ID:         routine.ID,
+			ImageUrl:   routine.ImageUrl,
+			OwnerID:    routine.OwnerID,
+			Owner:      routine.Owner,
+			SourceType: models.DatabaseSource,
 
 			// For database routines, we have creation timestamps
 			Created:  &routine.Created,
@@ -79,10 +76,8 @@ func (s *RoutineService) generateRoutinesFromBlueprints(userID int64) ([]models.
 		return nil, err
 	}
 
-	// Current time for determining applicability
-	now := time.Now()
 	// Uncomment if needed for day-specific logic
-	// today := now.Weekday()
+	// today := time.Now().Weekday()
 
 	var virtualRoutines []models.DisplayableRoutine
 
