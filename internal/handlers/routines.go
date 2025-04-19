@@ -6,13 +6,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bagvendt/chores/internal/contextkeys"
 	"github.com/bagvendt/chores/internal/database"
+	"github.com/bagvendt/chores/internal/models"
 	"github.com/bagvendt/chores/internal/templates"
 )
 
 func RoutinesHandler(w http.ResponseWriter, r *http.Request) {
 	// Strip prefix to get the path
-	path := strings.TrimPrefix(r.URL.Path, "/admin/routines")
+	path := strings.TrimPrefix(r.URL.Path, "/routines")
 
 	// Handle different routes
 	switch {
@@ -27,8 +29,12 @@ func RoutinesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func listRoutines(w http.ResponseWriter, r *http.Request) {
-	// TODO: Replace '1' with actual user ID
-	routines, err := database.GetRoutines(database.DB, 1)
+	user, ok := r.Context().Value(contextkeys.UserContextKey).(*models.User)
+	if !ok || user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	routines, err := database.GetRoutines(database.DB, user.ID)
 	if err != nil {
 		log.Printf("Failed to load routines: %v", err)
 		http.Error(w, "Failed to load routines", http.StatusInternalServerError)
@@ -64,9 +70,12 @@ func routineDetail(w http.ResponseWriter, r *http.Request, idStr string) {
 		// If it's an HTMX request, only render the detail component
 		templates.RoutineDetail(routine).Render(r.Context(), w)
 	} else {
-		// For regular requests, render the full page with the routine list
-		// TODO: Replace '1' with actual user ID
-		routines, err := database.GetRoutines(database.DB, 1)
+		user, ok := r.Context().Value(contextkeys.UserContextKey).(*models.User)
+		if !ok || user == nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		routines, err := database.GetRoutines(database.DB, user.ID)
 		if err != nil {
 			http.Error(w, "Failed to load routines", http.StatusInternalServerError)
 			return

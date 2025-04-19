@@ -13,7 +13,7 @@ import (
 )
 
 func ChoresHandler(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/admin/chores")
+	path := strings.TrimPrefix(r.URL.Path, "/chores")
 
 	switch {
 	case path == "" || path == "/":
