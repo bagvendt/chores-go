@@ -13,5 +13,6 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	//empty template
-	templates.Home().Render(r.Context(), w)
+	content := templates.Home()
+	templates.Base(content).Render(r.Context(), w)
 }
