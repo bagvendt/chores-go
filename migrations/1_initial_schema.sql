@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS routine_blueprints (
     to_be_completed_by TEXT NOT NULL,
     image TEXT NOT Null,
     allow_multiple_instances_per_day BOOLEAN NOT NULL DEFAULT 0,
-    recurrence TEXT CHECK (recurrence IN ('Daily', 'Weekly') OR recurrence IS NULL)
+    recurrence TEXT CHECK (recurrence IN ('Daily', 'Weekly', "Weekday") OR recurrence IS NULL)
 );
 
 -- Create routine_blueprint_chores table
