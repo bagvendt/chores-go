@@ -63,6 +63,9 @@ func main() {
 	})
 	rootMux.HandleFunc("/routine/", handlers.RoutineDetailHandler) // New route for routine detail view with chore cards
 
+	// API routes
+	rootMux.HandleFunc("/api/", handlers.APIHandler)
+
 	// Static files (now protected)
 	fs := http.FileServer(http.Dir(filepath.Join(".", "static")))
 	rootMux.Handle("/static/", http.StripPrefix("/static/", fs))

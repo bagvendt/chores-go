@@ -594,6 +594,17 @@ class ChoreCard extends HTMLElement {
       }
     }
 
+    // Get chore ID and routine ID
+    const choreId = this.getAttribute('chore-id');
+    const routineId = this.closest('[data-routine-id]')?.getAttribute('data-routine-id');
+
+    // Update status via API if we have both IDs
+    if (choreId && routineId) {
+      this.updateChoreCompletionStatus(routineId, choreId, newCompletedState);
+    }
+    else {
+      console.error('Chore ID or Routine ID not found in the DOM.');
+    }
     // Remove the animation class after it completes
     setTimeout(() => {
       if (card) {
@@ -601,6 +612,32 @@ class ChoreCard extends HTMLElement {
       }
       this.animationActive = false;
     }, 500);
+  }
+
+  /**
+   * Send API request to update chore completion status
+   * @param {string} routineId - ID of the routine
+   * @param {string} choreId - ID of the chore
+   * @param {boolean} completed - New completion status
+   */
+  updateChoreCompletionStatus(routineId, choreId, completed) {
+    fetch(`/api/routine/${routineId}/chore/${choreId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        completed: completed
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        console.error('Failed to update chore status:', response.statusText);
+      }
+    })
+    .catch(error => {
+      console.error('Error updating chore status:', error);
+    });
   }
 }
 

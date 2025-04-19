@@ -8,7 +8,7 @@ import (
 
 
 templ RoutineDetailWithStatus(routine models.Routine, chores []models.Chore, choreStatuses map[int64]bool) {
-    <div>
+    <div data-routine-id={ strconv.FormatInt(routine.ID, 10)}>
         <div class="chores-container">
             for _, chore := range chores {
                 <chore-card
