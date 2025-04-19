@@ -15,12 +15,12 @@ func main() {
 	}
 
 	// Set up the server routes
-	http.HandleFunc("/", handlers.MainHandler)
-	http.HandleFunc("/routines/", handlers.RoutinesHandler)
-	http.HandleFunc("/blueprints", handlers.BlueprintsHandler)
-	http.HandleFunc("/blueprints/", handlers.BlueprintsHandler)
-	http.HandleFunc("/chores", handlers.ChoresHandler)
-	http.HandleFunc("/chores/", handlers.ChoresHandler)
+	http.HandleFunc("/admin/", handlers.MainHandler)
+	http.HandleFunc("/admin/routines/", handlers.RoutinesHandler)
+	http.HandleFunc("/admin/blueprints", handlers.BlueprintsHandler)
+	http.HandleFunc("/admin/blueprints/", handlers.BlueprintsHandler)
+	http.HandleFunc("/admin/chores", handlers.ChoresHandler)
+	http.HandleFunc("/admin/chores/", handlers.ChoresHandler)
 
 	log.Println("Server is starting on port 8080...")
 	err := http.ListenAndServe(":8080", nil)
