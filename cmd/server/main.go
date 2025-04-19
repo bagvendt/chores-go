@@ -54,7 +54,14 @@ func main() {
 	rootMux := http.NewServeMux()
 
 	// Public/Home route (now protected)
-	rootMux.HandleFunc("/", handlers.HomeHandler)
+	rootMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		handlers.HomeHandler(w, r)
+	})
+	rootMux.HandleFunc("/routine/", handlers.RoutineDetailHandler) // New route for routine detail view with chore cards
 
 	// Static files (now protected)
 	fs := http.FileServer(http.Dir(filepath.Join(".", "static")))

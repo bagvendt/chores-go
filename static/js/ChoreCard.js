@@ -8,18 +8,7 @@ class ChoreCard extends HTMLElement {
    */
   constructor() {
     super();
-    /**
-     * The chore data object
-     * @type {Object|null}
-     * @private
-     */
-    this._chore = null;
-
-    /**
-     * Shadow DOM for encapsulation
-     * @type {ShadowRoot}
-     */
-    this.attachShadow({ mode: 'open' });
+    console.log('ChoreCard constructor');
 
     /**
      * Timer for tracking long press
@@ -55,60 +44,108 @@ class ChoreCard extends HTMLElement {
      * @private
      */
     this.touchStartY = null;
+
+    /**
+     * Flag to track if chore was ever completed
+     * @type {boolean}
+     * @private
+     */
+    this._wasCompleted = false;
   }
 
   /**
-   * Set the chore data for this component
-   * @param {object} chore - The chore data to display
+   * List of observed attributes that will trigger attributeChangedCallback
    */
-  set chore(chore) {
-    this._chore = chore;
-
-    // Ensure the wasCompleted property is initialized
-    if (this._chore && this._chore.completed) {
-      this._chore.wasCompleted = true;
-    } else if (this._chore) {
-      this._chore.wasCompleted = this._chore.wasCompleted || false;
-    }
-
-    this.render();
-  }
-
-  /**
-   * Get the chore data for this component
-   * @returns {object|null} The chore data
-   */
-  get chore() {
-    return this._chore;
+  static get observedAttributes() {
+    return ['image-url', 'title', 'completed', 'points', 'chore-id'];
   }
 
   /**
    * Component connected callback
    */
   connectedCallback() {
-    if (this._chore) {
+    this.render();
+    this.setupEventListeners();
+  }
+
+  /**
+   * Called when an observed attribute changes
+   */
+  attributeChangedCallback(name, oldValue, newValue) {
+    // Only re-render if a value actually changed
+    if (oldValue !== newValue) {
+      // If completed changes from true to false, remember it was completed before
+      if (name === 'completed' && oldValue === 'true' && newValue === 'false') {
+        this._wasCompleted = true;
+      }
+
       this.render();
     }
+  }
+
+  /**
+   * Set up all event listeners for the component
+   */
+  setupEventListeners() {
+    // Prevent scrolling on iOS
+    this.addEventListener(
+      'touchstart',
+      (e) => {
+        e.preventDefault();
+        this.startPress(e);
+      },
+      { passive: false }
+    );
+
+    this.addEventListener('mousedown', this.startPress.bind(this));
+    this.addEventListener('mouseup', this.endPress.bind(this));
+    this.addEventListener('mouseleave', this.cancelPress.bind(this));
+    this.addEventListener('touchend', this.endPress.bind(this));
+    this.addEventListener('touchcancel', this.cancelPress.bind(this));
+
+    // Prevent context menu from appearing on long press
+    this.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Handle touch move events
+    this.addEventListener(
+      'touchmove',
+      (e) => {
+        if ('touches' in e) {
+          this.checkTouchMove(e);
+        }
+      },
+      { passive: true }
+    );
+  }
+
+  /**
+   * Get attribute with default value if not present
+   */
+  getAttr(name, defaultValue = '') {
+    return this.hasAttribute(name) ? this.getAttribute(name) : defaultValue;
   }
 
   /**
    * Render the chore card
    */
   render() {
-    if (!this._chore) return;
-
-    const completedClass = this._chore.completed ? 'completed' : '';
+    const completed = this.getAttr('completed') === 'true';
+    const completedClass = completed ? 'completed' : '';
     // Only show status emoji for completed (✅) or previously completed (❌) states
-    // For initial state (never completed), don't show any indicator
-    const statusEmoji = this._chore.completed ? '✅' : this._chore.wasCompleted ? '❌' : '';
-    const points = this._chore.points || 0;
+    const statusEmoji = completed ? '✅' : this._wasCompleted ? '❌' : '';
+    const points = parseInt(this.getAttr('points', '0'), 10);
+    const imageUrl = this.getAttr('image-url');
+    const title = this.getAttr('title');
 
-    // Handle potentially null shadowRoot with a check
-    if (!this.shadowRoot) return;
-
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
+    // Create main CSS if it doesn't exist yet
+    if (!document.getElementById('chore-card-styles')) {
+      const styleSheet = document.createElement('style');
+      styleSheet.id = 'chore-card-styles';
+      styleSheet.textContent = `
+        chore-card {
           display: block;
           user-select: none;
           -webkit-user-select: none;
@@ -247,7 +284,7 @@ class ChoreCard extends HTMLElement {
           position: absolute;
           width: 40px;
           height: 40px;
-          background-image: url('../../img/star-smaller.png');
+          background-image: url('../../static/img/star-smaller.png');
           background-size: contain;
           background-repeat: no-repeat;
           background-position: center;
@@ -313,54 +350,20 @@ class ChoreCard extends HTMLElement {
             transform: translate(-50%, -50%) scale(1);
           }
         }
-      </style>
-      
+      `;
+      document.head.appendChild(styleSheet);
+    }
+
+    // Set the inner HTML content
+    this.innerHTML = `
       <div class="chore-card ${completedClass}">
-        <img class="chore-image" src="${this._chore.imageUrl}" alt="${this._chore.title}" draggable="false">
+        <img class="chore-image" src="${imageUrl}" alt="${title}" draggable="false">
         <div class="status-indicator">${statusEmoji}</div>
         <div class="progress-indicator"></div>
         <div class="star-container"></div>
         <div class="points-indicator">+${points}</div>
       </div>
     `;
-
-    const card = this.shadowRoot.querySelector('.chore-card');
-
-    if (card) {
-      // Prevent scrolling on iOS
-      card.addEventListener(
-        'touchstart',
-        (e) => {
-          e.preventDefault();
-          this.startPress(e);
-        },
-        { passive: false }
-      );
-
-      card.addEventListener('mousedown', this.startPress.bind(this));
-
-      card.addEventListener('mouseup', this.endPress.bind(this));
-      card.addEventListener('mouseleave', this.cancelPress.bind(this));
-      card.addEventListener('touchend', this.endPress.bind(this));
-      card.addEventListener('touchcancel', this.cancelPress.bind(this));
-
-      // Prevent context menu from appearing on long press
-      card.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        return false;
-      });
-
-      // Handle touch move events
-      card.addEventListener(
-        'touchmove',
-        (e) => {
-          if ('touches' in e) {
-            this.checkTouchMove(e);
-          }
-        },
-        { passive: true }
-      );
-    }
   }
 
   /**
@@ -375,11 +378,8 @@ class ChoreCard extends HTMLElement {
 
     if (this.animationActive) return;
 
-    const shadowRoot = this.shadowRoot;
-    if (!shadowRoot) return;
-
-    const progressIndicator = shadowRoot.querySelector('.progress-indicator');
-    const card = shadowRoot.querySelector('.chore-card');
+    const progressIndicator = this.querySelector('.progress-indicator');
+    const card = this.querySelector('.chore-card');
 
     if (!card) return;
 
@@ -435,11 +435,8 @@ class ChoreCard extends HTMLElement {
       this.pressTimer = null;
     }
 
-    const shadowRoot = this.shadowRoot;
-    if (!shadowRoot) return;
-
-    const progressIndicator = shadowRoot.querySelector('.progress-indicator');
-    const card = shadowRoot.querySelector('.chore-card');
+    const progressIndicator = this.querySelector('.progress-indicator');
+    const card = this.querySelector('.chore-card');
 
     if (progressIndicator instanceof HTMLElement) {
       progressIndicator.style.width = '0%';
@@ -484,11 +481,8 @@ class ChoreCard extends HTMLElement {
    * @param {number} numStars - The number of stars to create
    */
   createStarAnimation(numStars) {
-    const shadowRoot = this.shadowRoot;
-    if (!shadowRoot) return;
-
-    const starContainer = shadowRoot.querySelector('.star-container');
-    const pointsIndicator = shadowRoot.querySelector('.points-indicator');
+    const starContainer = this.querySelector('.star-container');
+    const pointsIndicator = this.querySelector('.points-indicator');
 
     if (!starContainer || !pointsIndicator) return;
 
@@ -549,32 +543,28 @@ class ChoreCard extends HTMLElement {
   completeLongPress() {
     this.cancelPress();
 
-    if (!this._chore) return;
-
-    const shadowRoot = this.shadowRoot;
-    if (!shadowRoot) return;
-
     // Get previous completion state
-    const wasCompletedBefore = this._chore.completed;
+    const wasCompletedBefore = this.getAttribute('completed') === 'true';
 
     // Toggle completion state
-    this._chore.completed = !this._chore.completed;
+    const newCompletedState = !wasCompletedBefore;
+    this.setAttribute('completed', newCompletedState.toString());
 
-    // Track if chore was ever completed to show the X later
+    // Track if chore was ever completed
     if (wasCompletedBefore) {
-      this._chore.wasCompleted = true;
+      this._wasCompleted = true;
     }
 
     // Update the appearance
-    const card = shadowRoot.querySelector('.chore-card');
-    const statusIndicator = shadowRoot.querySelector('.status-indicator');
+    const card = this.querySelector('.chore-card');
+    const statusIndicator = this.querySelector('.status-indicator');
 
     if (!card || !statusIndicator) return;
 
     // Prevent interactions during animation
     this.animationActive = true;
 
-    if (this._chore.completed) {
+    if (newCompletedState) {
       card.classList.add('completed');
       statusIndicator.textContent = '✅';
 
@@ -583,8 +573,8 @@ class ChoreCard extends HTMLElement {
 
       // Start star animation if the chore was just completed
       if (!wasCompletedBefore) {
-        // Get number of points from chore data
-        const points = this._chore.points || 0;
+        // Get number of points from attribute
+        const points = parseInt(this.getAttribute('points') || '0', 10);
         // Create one star for each point, minimum 5 stars
         this.createStarAnimation(Math.max(5, points));
       }
@@ -596,7 +586,7 @@ class ChoreCard extends HTMLElement {
     } else {
       card.classList.remove('completed');
       // Show X only if it was previously completed
-      statusIndicator.textContent = this._chore.wasCompleted ? '❌' : '';
+      statusIndicator.textContent = this._wasCompleted ? '❌' : '';
 
       // Add vibration feedback for un-completion
       if (navigator.vibrate) {
@@ -611,29 +601,8 @@ class ChoreCard extends HTMLElement {
       }
       this.animationActive = false;
     }, 500);
-
-    // Dispatch a structured CustomEvent with the completion status
-    this.dispatchCompletionChanged(this._chore.completed);
-  }
-
-  /**
-   * Dispatch a custom event for the completion status change
-   * @param {boolean} completed - The new completion status
-   */
-  dispatchCompletionChanged(completed) {
-    // Create a proper CustomEvent with detail object
-    const event = new CustomEvent('completion-changed', {
-      bubbles: true,
-      composed: true,
-      detail: { completed, choreId: this._chore ? this._chore.id : null },
-    });
-
-    // Dispatch the event from this element
-    this.dispatchEvent(event);
   }
 }
 
 // Register the custom element
 customElements.define('chore-card', ChoreCard);
-
-export default ChoreCard;

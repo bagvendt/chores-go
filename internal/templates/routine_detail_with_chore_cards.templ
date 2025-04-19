@@ -1,0 +1,24 @@
+package templates
+
+import (
+	"strconv"
+	"fmt"
+	"github.com/bagvendt/chores/internal/models"
+)
+
+
+templ RoutineDetailWithStatus(routine models.Routine, chores []models.Chore, choreStatuses map[int64]bool) {
+    <div>
+        <div class="chores-container">
+            for _, chore := range chores {
+                <chore-card
+                    image-url={ fmt.Sprintf("/static/%s", chore.Image) }
+                    title={ chore.Name }
+                    points={ strconv.Itoa(chore.DefaultPoints) }
+                    completed={ strconv.FormatBool(choreStatuses[chore.ID]) }
+                    chore-id={ strconv.FormatInt(chore.ID, 10) }>
+                </chore-card>
+            }
+        </div>
+    </div>
+}
