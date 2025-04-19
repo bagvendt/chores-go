@@ -15,6 +15,7 @@ func main() {
 	}
 
 	// Set up the server routes
+	http.HandleFunc("/", handlers.HomeHandler)
 	http.HandleFunc("/admin/", handlers.MainHandler)
 	http.HandleFunc("/admin/routines/", handlers.RoutinesHandler)
 	http.HandleFunc("/admin/blueprints", handlers.BlueprintsHandler)

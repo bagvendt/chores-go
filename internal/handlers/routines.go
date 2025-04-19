@@ -11,7 +11,7 @@ import (
 
 func RoutinesHandler(w http.ResponseWriter, r *http.Request) {
 	// Strip prefix to get the path
-	path := strings.TrimPrefix(r.URL.Path, "/routines")
+	path := strings.TrimPrefix(r.URL.Path, "/admin/routines")
 
 	// Handle different routes
 	switch {

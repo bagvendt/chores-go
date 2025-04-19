@@ -13,7 +13,7 @@ import (
 
 func BlueprintsHandler(w http.ResponseWriter, r *http.Request) {
 	// Strip prefix to get the path
-	path := strings.TrimPrefix(r.URL.Path, "/blueprints")
+	path := strings.TrimPrefix(r.URL.Path, "/admin/blueprints")
 
 	// Handle different routes
 	switch {
