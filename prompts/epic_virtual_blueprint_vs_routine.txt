@@ -3,20 +3,14 @@ Listen up
 This is going to be a tough one. 
 I will ask you so so many times, but we will get there i can feel it. 
 
-
 The task: 
 Write a function in the service/routines.go file
 
 GetReleavantRoutines(user_id) DisplayRoutine
 
-
-
 Okay so it must return a mix of Concrete routines from the Routines table that the user is working on that can still be worked on.
 
-
-And then it must mix that with Blueprint Routines that are relevant today. 
-
-
+And then it must mix that with synthetic Blueprint Routines that are relevant today. 
 
 Example:
 

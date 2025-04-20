@@ -50,6 +50,7 @@ templ BlueprintForm(blueprint *models.RoutineBlueprint, chores []models.Chore, i
 					<option value="">None</option>
 					<option value="Daily" selected?={ blueprint.Recurrence == models.Daily }>Daily</option>
 					<option value="Weekly" selected?={ blueprint.Recurrence == models.Weekly }>Weekly</option>
+					<option value="Weekday" selected?={ blueprint.Recurrence == models.Weekday }>Weekday</option>
 				</select>
 			</div>
 			<div class="form-group">
@@ -181,7 +182,7 @@ templ BlueprintDetail(blueprint *models.RoutineBlueprint, chores []models.Routin
 			</div>
 			if blueprint.Image != "" {
 				<div class="blueprint-image">
-					<img src={ fmt.Sprintf("/static/img/%s", blueprint.Image) } alt={ blueprint.Name }/>
+					<img src={ fmt.Sprintf("/static/%s", blueprint.Image) } alt={ blueprint.Name }/>
 				</div>
 			}
 		</div>
