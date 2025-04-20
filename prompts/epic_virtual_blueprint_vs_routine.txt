@@ -1,0 +1,43 @@
+Listen up 
+
+This is going to be a tough one. 
+I will ask you so so many times, but we will get there i can feel it. 
+
+
+The task: 
+Write a function in the service/routines.go file
+
+GetReleavantRoutines(user_id) DisplayRoutine
+
+
+
+Okay so it must return a mix of Concrete routines from the Routines table that the user is working on that can still be worked on.
+
+
+And then it must mix that with Blueprint Routines that are relevant today. 
+
+
+
+Example:
+
+It is monday morning (7:00)
+A routine from the routines table exists. It's recurrence is weekday and we are still within the deadline of created and to_be_completed_by. So we include this routine.
+
+There are no more relevant routines in the concrete routines table 
+
+BUT there are two blueprint routines that are relevant for today. 
+The afternoon and evening routines. Their recurrence match that today is a weekday. 
+
+
+I may have forgot tons of details. We will refine. 
+
+Gogogo
+
+Edit: 
+I have already made an attempt with 
+
+func (s *RoutineService) GetRoutinesToDisplay(userID int64) ([]models.DisplayableRoutine, error) {
+
+You can remove / refactor the function and the return struct as much as you like
+
+

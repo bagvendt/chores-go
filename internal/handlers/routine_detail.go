@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/bagvendt/chores/internal/contextkeys"
 	"github.com/bagvendt/chores/internal/database"
 	"github.com/bagvendt/chores/internal/models"
 	"github.com/bagvendt/chores/internal/services"
@@ -23,6 +26,17 @@ type ChoreWithStatus struct {
 func RoutineDetailHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the routine ID from the URL path
 	path := strings.TrimPrefix(r.URL.Path, "/routine/")
+
+	// Handle the case where we're creating a routine from a blueprint
+	if strings.HasPrefix(path, "create-from-blueprint/") {
+		blueprintIDStr := strings.TrimPrefix(path, "create-from-blueprint/")
+		if r.Method == http.MethodGet || r.Method == http.MethodPost {
+			createRoutineFromBlueprint(w, r, blueprintIDStr)
+			return
+		}
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
 	id, err := strconv.ParseInt(path, 10, 64)
 	if err != nil {
@@ -64,4 +78,63 @@ func RoutineDetailHandler(w http.ResponseWriter, r *http.Request) {
 	// Render the routine detail template with chore cards
 	content := templates.RoutineDetailWithStatus(*routine, chores, choreStatuses)
 	templates.Base(content).Render(r.Context(), w)
+}
+
+func createRoutineFromBlueprint(w http.ResponseWriter, r *http.Request, blueprintIDStr string) {
+	// Parse the blueprint ID
+	blueprintID, err := strconv.ParseInt(blueprintIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid blueprint ID", http.StatusBadRequest)
+		return
+	}
+
+	// Get the blueprint from the database
+	blueprint, blueprintChores, err := database.GetBlueprint(database.DB, blueprintID)
+	if err != nil {
+		log.Printf("Failed to get blueprint: %v", err)
+		http.Error(w, "Failed to load blueprint", http.StatusInternalServerError)
+		return
+	}
+	if blueprint == nil {
+		http.Error(w, "Blueprint not found", http.StatusNotFound)
+		return
+	}
+
+	// Make sure the user is authenticated
+	user, ok := r.Context().Value(contextkeys.UserContextKey).(*models.User)
+	if !ok || user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Create a new routine from the blueprint
+	routine := &models.Routine{
+		OwnerID: user.ID,
+	}
+
+	// Setup RoutineBlueprintID
+	routine.RoutineBlueprintID.Int64 = blueprint.ID
+	routine.RoutineBlueprintID.Valid = true
+
+	// Use the image from the blueprint if available
+	routine.ImageUrl = blueprint.Image
+
+	// Save the new routine to the database
+	if err := database.CreateRoutine(database.DB, routine); err != nil {
+		log.Printf("Failed to create routine: %v", err)
+		http.Error(w, "Failed to create routine", http.StatusInternalServerError)
+		return
+	}
+
+	// Create chore_routines for each blueprint chore
+	for _, bc := range blueprintChores {
+		_, err := database.UpsertChoreRoutine(database.DB, routine.ID, bc.ChoreID, false, user.ID)
+		if err != nil {
+			log.Printf("Warning: Failed to create chore_routine: %v", err)
+			// Continue with the rest of the chores
+		}
+	}
+
+	// Redirect to the new routine detail page
+	http.Redirect(w, r, fmt.Sprintf("/routine/%d", routine.ID), http.StatusSeeOther)
 }

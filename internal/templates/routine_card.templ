@@ -1,16 +1,29 @@
-package templates 
+package templates
 import (
-    "github.com/bagvendt/chores/internal/models"
-    "fmt"
+"github.com/bagvendt/chores/internal/models"
+"fmt"
 )
 
-templ RoutineCard(routine models.Routine) {
-    <a href={ templ.SafeURL(fmt.Sprintf("/routine/%d", routine.ID)) } style="text-decoration: none; color: inherit;">
-      <div class="routine-card">
-          <img draggable="false" class="routine-image" src={ fmt.Sprintf("/static/%s", routine.ImageUrl) } alt="Routine">
-          <div class="routine-title">Routine</div>
-          <div class="progress-bar"></div>
-          <div class="progress-text">1</div>
-        </div>
-    </a>
+templ RoutineCard(routine models.DisplayableRoutine) {
+// Check the source type to determine the correct link
+if routine.SourceType == models.BlueprintSource && routine.BlueprintID != nil {
+<a href={ templ.SafeURL(fmt.Sprintf("/routine/create-from-blueprint/%d", *routine.BlueprintID)) }
+    style="text-decoration: none; color: inherit;">
+    <div class="routine-card">
+        <img draggable="false" class="routine-image" src={ fmt.Sprintf("/static/%s", routine.ImageUrl) } alt="Routine">
+        <div class="routine-title">{ routine.Name }</div>
+        <div class="progress-bar"></div>
+        <div class="progress-text">{ fmt.Sprintf("%d/%d", routine.CompletedChores, routine.ChoreCount) }</div>
+    </div>
+</a>
+} else {
+<a href={ templ.SafeURL(fmt.Sprintf("/routine/%d", routine.ID)) } style="text-decoration: none; color: inherit;">
+    <div class="routine-card">
+        <img draggable="false" class="routine-image" src={ fmt.Sprintf("/static/%s", routine.ImageUrl) } alt="Routine">
+        <div class="routine-title">{ routine.Name }</div>
+        <div class="progress-bar"></div>
+        <div class="progress-text">{ fmt.Sprintf("%d/%d", routine.CompletedChores, routine.ChoreCount) }</div>
+    </div>
+</a>
+}
 }

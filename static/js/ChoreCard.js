@@ -630,14 +630,14 @@ class ChoreCard extends HTMLElement {
         completed: completed
       })
     })
-    .then(response => {
-      if (!response.ok) {
-        console.error('Failed to update chore status:', response.statusText);
-      }
-    })
-    .catch(error => {
-      console.error('Error updating chore status:', error);
-    });
+      .then(response => {
+        if (!response.ok) {
+          console.error('Failed to update chore status:', response.statusText);
+        }
+      })
+      .catch(error => {
+        console.error('Error updating chore status:', error);
+      });
   }
 }
 

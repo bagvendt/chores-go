@@ -3,36 +3,14 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/bagvendt/chores/internal/database"
 	"github.com/bagvendt/chores/internal/models"
 	"github.com/bagvendt/chores/internal/templates"
+	"github.com/bagvendt/chores/internal/utils"
 )
-
-// getImageFiles reads the static/img directory and returns a list of image filenames.
-func getImageFiles() ([]string, error) {
-	var files []string
-	imgDir := "./static/img"
-	items, err := os.ReadDir(imgDir)
-	if err != nil {
-		log.Printf("Error reading image directory %s: %v", imgDir, err)
-		return nil, err
-	}
-
-	for _, item := range items {
-		if !item.IsDir() {
-			ext := filepath.Ext(item.Name())
-			if ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".gif" || ext == ".svg" {
-				files = append(files, item.Name())
-			}
-		}
-	}
-	return files, nil
-}
 
 func BlueprintsHandler(w http.ResponseWriter, r *http.Request) {
 	// Strip prefix to get the path
@@ -121,7 +99,7 @@ func newBlueprint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imageFiles, err := getImageFiles()
+	imageFiles, err := utils.GetImageFiles()
 	if err != nil {
 		// Log the error but continue, maybe show a message in the form?
 		log.Printf("Warning: Failed to load image files: %v", err)
@@ -162,7 +140,7 @@ func editBlueprint(w http.ResponseWriter, r *http.Request, idStr string) {
 		return
 	}
 
-	imageFiles, err := getImageFiles()
+	imageFiles, err := utils.GetImageFiles()
 	if err != nil {
 		log.Printf("Warning: Failed to load image files: %v", err)
 		// Continue without images rather than failing completely

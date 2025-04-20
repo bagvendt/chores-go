@@ -2,7 +2,7 @@ package templates
 
 import "github.com/bagvendt/chores/internal/models"
 
-templ Home(routines []models.Routine) {
+templ Home(routines []models.DisplayableRoutine) {
     <div class="home-container">
         if len(routines) == 0 {
             <p>No routines available. Create some routines first!</p>

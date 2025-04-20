@@ -10,6 +10,7 @@ import (
 	"github.com/bagvendt/chores/internal/database"
 	"github.com/bagvendt/chores/internal/models"
 	"github.com/bagvendt/chores/internal/templates"
+	"github.com/bagvendt/chores/internal/utils"
 )
 
 func ChoresHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +82,7 @@ func newChore(w http.ResponseWriter, r *http.Request) {
 	}
 	chore := &models.Chore{}
 
-	imageFiles, err := getImageFiles()
+	imageFiles, err := utils.GetImageFiles()
 	if err != nil {
 		log.Printf("Error getting image files: %v", err)
 		http.Error(w, "Failed to load image options", http.StatusInternalServerError)
@@ -152,7 +153,7 @@ func editChore(w http.ResponseWriter, r *http.Request, idStr string) {
 		return
 	}
 
-	imageFiles, err := getImageFiles()
+	imageFiles, err := utils.GetImageFiles()
 	if err != nil {
 		log.Printf("Error getting image files: %v", err)
 		http.Error(w, "Failed to load image options", http.StatusInternalServerError)

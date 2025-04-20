@@ -10,12 +10,12 @@ import (
 // GetRoutines retrieves all routines from the database for a specific user
 func GetRoutines(db *sql.DB, userID int64) ([]models.Routine, error) {
 	rows, err := db.Query(`
-		SELECT r.id, r.created, r.modified, r.owner_id,
+		SELECT r.id, r.created, r.modified, r.owner_id, r.routine_blueprint_id, -- Added r.routine_blueprint_id
 		       u.name as owner_name, 
-		       rb.image as image_url -- Get image from routine_blueprints
+		       rb.image as image_url
 		FROM routines r
 		LEFT JOIN users u ON r.owner_id = u.id
-		LEFT JOIN routine_blueprints rb ON r.routine_blueprint_id = rb.id -- Join routine_blueprints
+		LEFT JOIN routine_blueprints rb ON r.routine_blueprint_id = rb.id
 		WHERE r.owner_id = ?
 		ORDER BY r.created DESC
 	`, userID)
@@ -35,6 +35,7 @@ func GetRoutines(db *sql.DB, userID int64) ([]models.Routine, error) {
 			&created,
 			&modified,
 			&r.OwnerID,
+			&r.RoutineBlueprintID, // Scan the new field
 			&owner.Name,
 			&imageUrl,
 		)
@@ -61,14 +62,22 @@ func GetRoutine(db *sql.DB, id int64) (*models.Routine, error) {
 	var created, modified string
 	var imageUrl sql.NullString
 	err := db.QueryRow(`
-		SELECT r.id, r.created, r.modified, r.owner_id,
+		SELECT r.id, r.created, r.modified, r.owner_id, r.routine_blueprint_id, -- Added r.routine_blueprint_id
 		       u.name as owner_name, 
-		       rb.image as image_url -- Get image from routine_blueprints
+		       rb.image as image_url
 		FROM routines r
 		LEFT JOIN users u ON r.owner_id = u.id
-		LEFT JOIN routine_blueprints rb ON r.routine_blueprint_id = rb.id -- Join routine_blueprints
+		LEFT JOIN routine_blueprints rb ON r.routine_blueprint_id = rb.id
 		WHERE r.id = ?
-	`, id).Scan(&r.ID, &created, &modified, &r.OwnerID, &owner.Name, &imageUrl)
+	`, id).Scan(
+		&r.ID,
+		&created,
+		&modified,
+		&r.OwnerID,
+		&r.RoutineBlueprintID, // Scan the new field
+		&owner.Name,
+		&imageUrl,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -84,4 +93,57 @@ func GetRoutine(db *sql.DB, id int64) (*models.Routine, error) {
 		r.ImageUrl = ""
 	}
 	return &r, nil
+}
+
+// CreateRoutine creates a new routine
+func CreateRoutine(db *sql.DB, routine *models.Routine) error {
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	// Prepare the routine_blueprint_id for the query
+	var blueprintID interface{}
+	if routine.RoutineBlueprintID.Valid {
+		blueprintID = routine.RoutineBlueprintID.Int64
+	} else {
+		blueprintID = nil
+	}
+
+	result, err := db.Exec(`
+		INSERT INTO routines (created, modified, owner_id, routine_blueprint_id)
+		VALUES (?, ?, ?, ?)
+	`,
+		now,
+		now,
+		routine.OwnerID,
+		blueprintID,
+	)
+	if err != nil {
+		return err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	routine.ID = id
+	routine.Created, _ = time.Parse(time.RFC3339, now)
+	routine.Modified = routine.Created
+
+	return nil
+}
+
+// GetChoreCountsForRoutine counts the total number of chores and completed chores for a routine
+func GetChoreCountsForRoutine(db *sql.DB, routineID int64) (total int, completed int, err error) {
+	// Query to count total chores and completed chores for the routine
+	row := db.QueryRow(`
+		SELECT 
+			COUNT(*), 
+			COUNT(CASE WHEN completed_at IS NOT NULL THEN 1 END)
+		FROM chore_routines
+		WHERE routine_id = ?
+	`, routineID)
+
+	// Scan the results
+	err = row.Scan(&total, &completed)
+	return total, completed, err
 }

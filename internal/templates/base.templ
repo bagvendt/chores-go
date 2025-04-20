@@ -1,5 +1,9 @@
 package templates
 
+import (
+	"github.com/bagvendt/chores/internal/utils"
+)
+
 templ Base(content templ.Component) {
 	<!DOCTYPE html>
 	<html lang="da">
@@ -8,9 +12,15 @@ templ Base(content templ.Component) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>Chores</title>
 			<link rel="stylesheet" href="/static/css/main.css"/>
-			<script src="/static/js/htmx.org@2.0.4"></script>
-			<script src="/static/js/ChoreCard.js?heste"></script>
+			<script src="/static/js/ChoreCard.js"></script>
 			<style>
+				.preload-images {
+					position: absolute;
+					width: 0;
+					height: 0;
+					overflow: hidden;
+					z-index: -1;
+				}
 			</style>
 		</head>
 		<body>
@@ -21,6 +31,18 @@ templ Base(content templ.Component) {
 					@content
 				</main>
 			</div>
+
+			<div class="preload-images">
+				@preloadImagesComponent()
+			</div>
 		</body>
 	</html>
+}
+
+templ preloadImagesComponent() {
+	if images, err := utils.GetImageFiles(); err == nil {
+		for _, img := range images {
+			<img src={"/static/img/" + img} alt="" style="display: none;" loading="eager" />
+		}
+	}
 }

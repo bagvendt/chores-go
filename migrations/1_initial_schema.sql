@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS routine_blueprints (
     modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     to_be_completed_by TEXT NOT NULL,
     name TEXT NOT NULL,
-    image TEXT NOT Null,
+    image TEXT NOT NULL,
     allow_multiple_instances_per_day BOOLEAN NOT NULL DEFAULT 0,
     recurrence TEXT CHECK (recurrence IN ('Daily', 'Weekly', "Weekday") OR recurrence IS NULL)
 );
@@ -118,8 +118,8 @@ INSERT INTO routine_blueprint_chores (routine_blueprint_id, chore_id) VALUES
 INSERT INTO users (id, name, password) VALUES (1, 'werner', '');
 
 -- Seed routines
-INSERT INTO routines (owner_id, routine_blueprint_id) VALUES
-(1, 1), -- Morning
-(1, 2), -- Afternoon
-(1, 3); -- Bedtime
+-- INSERT INTO routines (owner_id, routine_blueprint_id) VALUES
+-- (1, 1), -- Morning
+-- (1, 2), -- Afternoon
+-- (1, 3); -- Bedtime
 
