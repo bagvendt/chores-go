@@ -75,23 +75,23 @@ CREATE TABLE IF NOT EXISTS chore_routines (
 
 -- Seed chores
 INSERT INTO chores (name, default_points, image) VALUES
-('Spis morgenmad', 10, 'img/breakfast.png'),
-('Tag tøj på', 10, 'img/get-dressed.png'),
-('Børst tænder (morgen)', 5, 'img/brush-teeth.png'),
-('Pak madkasse', 15, 'img/lunch-box.png'),
-('Kom ud af døren', 5, 'img/door.png'),
-('Vask hænder', 5, 'img/wash-hands.png'),
-('Dæk bordet', 15, 'img/set-table.png'),
-('Hjælp med madlavning', 25, 'img/prepare-dinner.png'),
-('Børst tænder (aften)', 5, 'img/brush-teeth.png'),
-('Tag nattøj på', 5, 'img/pyjamas.png'),
-('Læs en bog', 20, 'img/read-story-father.png');
+('Spis morgenmad', 10, 'img/breakfast.avif'),
+('Tag tøj på', 10, 'img/get-dressed.avif'),
+('Børst tænder (morgen)', 5, 'img/brush-teeth.avif'),
+('Pak madkasse', 15, 'img/lunch-box.avif'),
+('Kom ud af døren', 5, 'img/door.avif'),
+('Vask hænder', 5, 'img/wash-hands.avif'),
+('Dæk bordet', 15, 'img/set-table.avif'),
+('Hjælp med madlavning', 25, 'img/prepare-dinner.avif'),
+('Børst tænder (aften)', 5, 'img/brush-teeth.avif'),
+('Tag nattøj på', 5, 'img/pyjamas.avif'),
+('Læs en bog', 20, 'img/read-story-father.avif');
 
 -- Seed routine blueprints
 INSERT INTO routine_blueprints (name, to_be_completed_by, image, allow_multiple_instances_per_day, recurrence) VALUES
-('Morgen', '08:00:00', 'img/morning.png', 0, 'Weekday'),
-('Eftermiddag', '17:00:00', 'img/afternoon.png', 0, 'Weekday'),
-('Aften', '20:00:00', 'img/bedtime.png', 0, 'Weekday');
+('Morgen', '08:00:00', 'img/morning.avif', 0, 'Weekday'),
+('Eftermiddag', '17:00:00', 'img/afternoon.avif', 0, 'Weekday'),
+('Aften', '20:00:00', 'img/bedtime.avif', 0, 'Weekday');
 
 -- Seed routine_blueprint_chores
 -- Morning (id=1)

@@ -284,7 +284,7 @@ class ChoreCard extends HTMLElement {
           position: absolute;
           width: 40px;
           height: 40px;
-          background-image: url('../../static/img/star-smaller.png');
+          background-image: url('../../static/img/star-smaller.avif');
           background-size: contain;
           background-repeat: no-repeat;
           background-position: center;

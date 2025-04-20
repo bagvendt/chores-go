@@ -19,7 +19,7 @@ func GetImageFiles() ([]string, error) {
 	for _, item := range items {
 		if !item.IsDir() {
 			ext := filepath.Ext(item.Name())
-			if ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".gif" || ext == ".svg" {
+			if ext == ".avif" {
 				files = append(files, item.Name())
 			}
 		}

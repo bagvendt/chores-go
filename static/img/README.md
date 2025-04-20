@@ -13,23 +13,23 @@ For the purposes of this demo, we're using references to images that don't exist
 The following images are referenced in the application:
 
 ### Chores Images
-- `brush-teeth.png` - For "Brush teeth" chore
-- `get-dressed.png` - For "Get dressed" chore
-- `lunch-box.png` - For "Pack lunch box" chore
-- `breakfast.png` - For "Eat breakfast" chore
-- `door.png` - For "Get out of the door" chore
-- `wash-hands.png` - For "Wash hands" chore
-- `set-table.png` - For "Set the table" chore
-- `cooking.png` - For "Help with cooking" chore
-- `clear-table.png` - For "Clear the table" chore
-- `dishwasher.png` - For "Load dishwasher" chore
-- `wipe-counter.png` - For "Wipe counters" chore
-- `pajamas.png` - For "Put on pajamas" chore
-- `book.png` - For "Read a book" chore
-- `lights-out.png` - For "Lights out" chore
+- `brush-teeth.avif` - For "Brush teeth" chore
+- `get-dressed.avif` - For "Get dressed" chore
+- `lunch-box.avif` - For "Pack lunch box" chore
+- `breakfast.avif` - For "Eat breakfast" chore
+- `door.avif` - For "Get out of the door" chore
+- `wash-hands.avif` - For "Wash hands" chore
+- `set-table.avif` - For "Set the table" chore
+- `cooking.avif` - For "Help with cooking" chore
+- `clear-table.avif` - For "Clear the table" chore
+- `dishwasher.avif` - For "Load dishwasher" chore
+- `wipe-counter.avif` - For "Wipe counters" chore
+- `pajamas.avif` - For "Put on pajamas" chore
+- `book.avif` - For "Read a book" chore
+- `lights-out.avif` - For "Lights out" chore
 
 ### Shop Items Images
-- `screen-time.png` - For "Extra screen time" reward
-- `dessert.png` - For "Favorite dessert" reward
-- `toy.png` - For "Small toy" reward
-- `movie.png` - For "Family movie night" reward 
+- `screen-time.avif` - For "Extra screen time" reward
+- `dessert.avif` - For "Favorite dessert" reward
+- `toy.avif` - For "Small toy" reward
+- `movie.avif` - For "Family movie night" reward 
