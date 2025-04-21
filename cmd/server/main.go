@@ -44,11 +44,6 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	// Update existing users with bcrypt-hashed passwords
-	if err := database.UpdateUsersWithHashedPasswords(); err != nil {
-		log.Fatalf("Failed to update user passwords: %v", err)
-	}
-
 	// Public routes (without auth)
 	publicMux := http.NewServeMux()
 	publicMux.HandleFunc("/login", handlers.LoginHandler)   // Login route
