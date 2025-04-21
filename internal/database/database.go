@@ -2,6 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"log"
+	"os"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -9,7 +12,15 @@ var DB *sql.DB
 
 func Init() error {
 	var err error
-	DB, err = sql.Open("sqlite3", "chores.db")
+
+	// Get database URL from environment variable or use default
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		dbURL = "chores.db"
+	}
+	log.Printf("Using database URL: %s", dbURL)
+
+	DB, err = sql.Open("sqlite3", dbURL)
 	if err != nil {
 		return err
 	}
@@ -20,4 +31,4 @@ func Init() error {
 	}
 
 	return nil
-} 
+}
