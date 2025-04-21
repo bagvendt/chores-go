@@ -7,7 +7,14 @@ import (
 
 templ ChoreForm(chore *models.Chore, imageFiles []string) {
 	<div class="chore-form">
-		<form method="post">
+		<form method="post" action={
+			templ.SafeURL(func() string {
+				if chore != nil && chore.ID != 0 {
+					return "/admin/chores/" + strconv.FormatInt(chore.ID, 10) + "/edit"
+				}
+				return "/admin/chores"
+			}())
+		}>
 			<div class="form-group">
 				<label for="name">Name</label>
 				<input type="text" id="name" name="name" value={ chore.Name } required />

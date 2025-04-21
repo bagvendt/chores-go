@@ -10,7 +10,7 @@ if routine.SourceType == models.BlueprintSource && routine.BlueprintID != nil {
 <a href={ templ.SafeURL(fmt.Sprintf("/routine/create-from-blueprint/%d", *routine.BlueprintID)) }
     style="text-decoration: none; color: inherit;">
     <div class="routine-card">
-        <img draggable="false" class="routine-image" src={ fmt.Sprintf("/static/%s", routine.ImageUrl) } alt="Routine">
+        <img draggable="false" class="routine-image" src={ fmt.Sprintf("/static/img/%s", routine.ImageUrl) } alt="Routine">
         <div class="routine-title">{ routine.Name }</div>
         <div class="progress-bar"></div>
         <div class="progress-text">{ fmt.Sprintf("%d/%d", routine.CompletedChores, routine.ChoreCount) }</div>
@@ -19,7 +19,7 @@ if routine.SourceType == models.BlueprintSource && routine.BlueprintID != nil {
 } else {
 <a href={ templ.SafeURL(fmt.Sprintf("/routine/%d", routine.ID)) } style="text-decoration: none; color: inherit;">
     <div class="routine-card">
-        <img draggable="false" class="routine-image" src={ fmt.Sprintf("/static/%s", routine.ImageUrl) } alt="Routine">
+        <img draggable="false" class="routine-image" src={ fmt.Sprintf("/static/img/%s", routine.ImageUrl) } alt="Routine">
         <div class="routine-title">{ routine.Name }</div>
         <div class="progress-bar"></div>
         <div class="progress-text">{ fmt.Sprintf("%d/%d", routine.CompletedChores, routine.ChoreCount) }</div>

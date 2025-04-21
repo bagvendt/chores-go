@@ -124,27 +124,52 @@ func editChore(w http.ResponseWriter, r *http.Request, idStr string) {
 		http.Error(w, "Invalid chore ID", http.StatusBadRequest)
 		return
 	}
+
 	chore, err := database.GetChore(database.DB, id)
 	if err != nil {
 		http.Error(w, "Failed to load chore", http.StatusInternalServerError)
 		return
 	}
+
 	if chore == nil {
 		http.Error(w, "Chore not found", http.StatusNotFound)
 		return
 	}
+
 	if r.Method == http.MethodPost {
+		println(1)
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Failed to parse form", http.StatusBadRequest)
 			return
 		}
+
+		// Log form values for debugging
+		log.Printf("Form values - name: %s, default_points: %s, image: %s",
+			r.FormValue("name"),
+			r.FormValue("default_points"),
+			r.FormValue("image"))
+		log.Printf("Previous chore values - name: %s, default_points: %d, image: %s",
+			chore.Name,
+			chore.DefaultPoints,
+			chore.Image)
+
+		// Update the chore with form values
 		chore.Name = r.FormValue("name")
 		chore.DefaultPoints = atoiOrZero(r.FormValue("default_points"))
 		chore.Image = r.FormValue("image")
+
+		// Log updated chore object before saving
+		log.Printf("Updated chore - name: %s, default_points: %d, image: %s",
+			chore.Name,
+			chore.DefaultPoints,
+			chore.Image)
+
 		if err := database.UpdateChore(database.DB, chore); err != nil {
+			log.Printf("Error updating chore: %v", err)
 			http.Error(w, "Failed to update chore", http.StatusInternalServerError)
 			return
 		}
+
 		if r.Header.Get("HX-Request") == "true" {
 			w.Header().Set("HX-Redirect", "/admin/chores")
 		} else {

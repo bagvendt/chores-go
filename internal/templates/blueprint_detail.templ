@@ -182,7 +182,7 @@ templ BlueprintDetail(blueprint *models.RoutineBlueprint, chores []models.Routin
 			</div>
 			if blueprint.Image != "" {
 				<div class="blueprint-image">
-					<img src={ fmt.Sprintf("/static/%s", blueprint.Image) } alt={ blueprint.Name }/>
+					<img src={ fmt.Sprintf("/static/img/%s", blueprint.Image) } alt={ blueprint.Name }/>
 				</div>
 			}
 		</div>
