@@ -116,9 +116,9 @@ INSERT INTO routine_blueprint_chores (routine_blueprint_id, chore_id) VALUES
 (3, 11); -- Læs en bog
 
 -- Seed users
-INSERT INTO users (id, name, password) VALUES (1, 'poul', '$2a$12$uhm7stebbbnbrx9vbEbxcu8oAt/VX8QdfUVE/lgG8dBS6cAlqcq2.');
-INSERT INTO users (id, name, password) VALUES (2, 'ulla', '$2a$12$uhm7stebbbnbrx9vbEbxcu8oAt/VX8QdfUVE/lgG8dBS6cAlqcq2.');
-INSERT INTO users (id, name, password, is_admin) VALUES (3, 'bagvendt', '$2a$12$uhm7stebbbnbrx9vbEbxcu8oAt/VX8QdfUVE/lgG8dBS6cAlqcq2.', 1);
+INSERT INTO users (id, name, password) VALUES (1, 'poul', '$2a$12$EnSRzqVfUOh504LkmNYAW.I5.mhjK3oSjDY8i.ZVu2FyYe9O5yH4.');
+INSERT INTO users (id, name, password) VALUES (2, 'ulla', '$2a$12$EnSRzqVfUOh504LkmNYAW.I5.mhjK3oSjDY8i.ZVu2FyYe9O5yH4.');
+INSERT INTO users (id, name, password, is_admin) VALUES (3, 'bagvendt', '$2a$12$EnSRzqVfUOh504LkmNYAW.I5.mhjK3oSjDY8i.ZVu2FyYe9O5yH4.', 1);
 
 
 -- Seed routines

@@ -54,62 +54,65 @@ If 2 fails then do not apply 3.
 ## Data model
 
 ### User
-- ID Int Primary key
-- Created datetime
-- Modified datetime
-- Name str required
-- Password str required - Hash salt iterations something clever
-
+- ID int64 Primary key
+- Created time.Time
+- Modified time.Time
+- Name string required
+- Password string required (not serialized to JSON)
 
 ### Chore
-- ID Int Primary key
-- Created datetime
-- Modified datetime
-- Name
-- Default points positive int
-- Image - str
-
+- ID int64 Primary key
+- Created time.Time
+- Modified time.Time
+- Name string
+- DefaultPoints int
+- Image string
 
 ### Routine Blueprint
-- ID Int Primary key
-- Created datetime
-- Modified datetime
-- to_be_completed_by: time_of_day
-- allow_multiple_instances_per_day
-- Recurrence: Nullable enum. Daily, Weekly, Weekday
-
+- ID int64 Primary key
+- Created time.Time
+- Modified time.Time
+- Name string
+- ToBeCompletedBy string
+- AllowMultipleInstancesPerDay bool
+- Recurrence enum (Daily, Weekly, Weekday)
+- Image string
 
 ### Routine Blueprint Chore
-- ID Int Primary key
-- Created datetime
-- Modified datetime
-- FK to routine blueprint
-- FK to chore
-- Image : str
-
- 
+- ID int64 Primary key
+- Created time.Time
+- Modified time.Time
+- RoutineBlueprintID int64 (FK to routine blueprint)
+- ChoreID int64 (FK to chore)
+- Image string
+- Chore *Chore (convenience field, not stored in DB)
 
 ### Routine
-- ID Int Primary key
-- Created datetime
-- Modified datetime
-- Name
-- to_be_completed_by: time_of_day
-- owner: FK to User
-
+- ID int64 Primary key
+- Created time.Time
+- Modified time.Time
+- OwnerID int64 (FK to User)
+- RoutineBlueprintID sql.NullInt64 (optional FK to routine blueprint)
+- ImageUrl string
+- Owner *User (convenience field, not stored in DB)
 
 ### ChoreRoutine
-- ID Int Primary key
-- Created datetime
-- Modified datetime
-- Completed_at nullable datetime
-- Completed_by fk to user
-- Points_awarded: positive int
+- ID int64 Primary key
+- Created time.Time
+- Modified time.Time
+- CompletedAt *time.Time (nullable)
+- CompletedByID *int64 (nullable FK to user)
+- PointsAwarded int
+- RoutineID int64 (FK to Routine)
+- ChoreID int64 (FK to Chore)
+- CompletedBy *User (convenience field, not stored in DB)
+- Routine *Routine (convenience field, not stored in DB)
+- Chore *Chore (convenience field, not stored in DB)
 
 ## Migration
-- ID Int Primary key
+- ID int Primary key
 - applied_at datetime
-- migration_id: Unique positive integer (sequential)
+- migration_id Unique positive integer (sequential)
 
 
 
