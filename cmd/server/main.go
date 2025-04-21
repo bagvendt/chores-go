@@ -5,43 +5,37 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
-	"time"
 
 	"github.com/bagvendt/chores/internal/contextkeys"
 	"github.com/bagvendt/chores/internal/database"
 	"github.com/bagvendt/chores/internal/handlers"
-	"github.com/bagvendt/chores/internal/models"
+	"github.com/bagvendt/chores/internal/services"
 )
 
 // authMiddlewareHandler wraps a http.Handler with authentication logic,
 // and attaches the authenticated user to the request context.
 func authMiddlewareHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Replace with real auth logic (session, JWT, etc.)
-		username, password, ok := r.BasicAuth()
-		if !ok || !validateUser(username, password) {
-			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		// Check for session cookie
+		cookie, err := r.Cookie("session_token")
+		if err != nil {
+			// No session cookie found, redirect to login
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		// Validate the session token
+		user, valid := services.ValidateSession(cookie.Value)
+		if !valid {
+			// Invalid session, redirect to login
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 
 		// Attach the authenticated user to context
-		user := &models.User{
-			ID:       1, // TODO: Replace with actual user ID from DB
-			Created:  time.Now(),
-			Modified: time.Now(),
-			Name:     username,
-			Password: password,
-		}
 		ctx := context.WithValue(r.Context(), contextkeys.UserContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
-}
-
-// validateUser is a stub for user credential validation.
-func validateUser(username, password string) bool {
-	// TODO: Implement actual user validation, e.g., lookup in database
-	return username == "admin" && password == "secret"
 }
 
 func main() {
@@ -50,25 +44,35 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	// Root mux for all routes
-	rootMux := http.NewServeMux()
+	// Update existing users with bcrypt-hashed passwords
+	if err := database.UpdateUsersWithHashedPasswords(); err != nil {
+		log.Fatalf("Failed to update user passwords: %v", err)
+	}
+
+	// Public routes (without auth)
+	publicMux := http.NewServeMux()
+	publicMux.HandleFunc("/login", handlers.LoginHandler)   // Login route
+	publicMux.HandleFunc("/logout", handlers.LogoutHandler) // Logout route
+
+	// Static files (should be accessible without auth)
+	fs := http.FileServer(http.Dir(filepath.Join(".", "static")))
+	publicMux.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	// Root mux for all routes (protected by auth)
+	protectedMux := http.NewServeMux()
 
 	// Public/Home route (now protected)
-	rootMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	protectedMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
 		}
 		handlers.HomeHandler(w, r)
 	})
-	rootMux.HandleFunc("/routine/", handlers.RoutineDetailHandler) // New route for routine detail view with chore cards
+	protectedMux.HandleFunc("/routine/", handlers.RoutineDetailHandler) // New route for routine detail view with chore cards
 
 	// API routes
-	rootMux.HandleFunc("/api/", handlers.APIHandler)
-
-	// Static files (now protected)
-	fs := http.FileServer(http.Dir(filepath.Join(".", "static")))
-	rootMux.Handle("/static/", http.StripPrefix("/static/", fs))
+	protectedMux.HandleFunc("/api/", handlers.APIHandler)
 
 	// Admin sub-mux for structured admin routes
 	adminMux := http.NewServeMux()
@@ -78,13 +82,27 @@ func main() {
 	adminMux.HandleFunc("/blueprints/", handlers.BlueprintsHandler)
 	adminMux.HandleFunc("/chores", handlers.ChoresHandler)
 	adminMux.HandleFunc("/chores/", handlers.ChoresHandler)
-	rootMux.Handle("/admin/", http.StripPrefix("/admin", adminMux))
+	protectedMux.Handle("/admin/", http.StripPrefix("/admin", adminMux))
 
-	// Wrap all routes in auth middleware
-	handler := authMiddlewareHandler(rootMux)
+	// Wrap protected routes in auth middleware
+	protectedHandler := authMiddlewareHandler(protectedMux)
+
+	// Main mux that combines public and protected routes
+	mainMux := http.NewServeMux()
+
+	// Add public routes first (no auth)
+	mainMux.HandleFunc("/login", publicMux.ServeHTTP)
+	mainMux.HandleFunc("/logout", publicMux.ServeHTTP)
+	mainMux.Handle("/static/", publicMux)
+
+	// Add protected routes (with auth)
+	mainMux.HandleFunc("/", protectedHandler.ServeHTTP)
+	mainMux.HandleFunc("/routine/", protectedHandler.ServeHTTP)
+	mainMux.HandleFunc("/api/", protectedHandler.ServeHTTP)
+	mainMux.Handle("/admin/", protectedHandler)
 
 	log.Println("Server is starting on port 8080...")
-	if err := http.ListenAndServe(":8080", handler); err != nil {
+	if err := http.ListenAndServe(":8080", mainMux); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
 }

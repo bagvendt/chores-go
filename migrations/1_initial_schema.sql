@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name TEXT NOT NULL,
-    password TEXT NOT NULL
+    password TEXT NOT NULL,
+    is_admin BOOLEAN NOT NULL DEFAULT 0
 );
 
 -- Create chores table
@@ -115,11 +116,10 @@ INSERT INTO routine_blueprint_chores (routine_blueprint_id, chore_id) VALUES
 (3, 11); -- Læs en bog
 
 -- Seed users
-INSERT INTO users (id, name, password) VALUES (1, 'werner', '');
+INSERT INTO users (id, name, password) VALUES (1, 'poul', '$2a$12$uhm7stebbbnbrx9vbEbxcu8oAt/VX8QdfUVE/lgG8dBS6cAlqcq2.');
+INSERT INTO users (id, name, password) VALUES (2, 'ulla', '$2a$12$uhm7stebbbnbrx9vbEbxcu8oAt/VX8QdfUVE/lgG8dBS6cAlqcq2.');
+INSERT INTO users (id, name, password, is_admin) VALUES (3, 'bagvendt', '$2a$12$uhm7stebbbnbrx9vbEbxcu8oAt/VX8QdfUVE/lgG8dBS6cAlqcq2.', 1);
+
 
 -- Seed routines
--- INSERT INTO routines (owner_id, routine_blueprint_id) VALUES
--- (1, 1), -- Morning
--- (1, 2), -- Afternoon
--- (1, 3); -- Bedtime
 
