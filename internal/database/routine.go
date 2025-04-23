@@ -159,7 +159,7 @@ func GetRelevantRoutines(db *sql.DB, userID int64, today time.Time) ([]models.Ro
 		       rb.image as image_url
 		FROM routines r
 		LEFT JOIN routine_blueprints rb ON r.routine_blueprint_id = rb.id
-		WHERE r.owner_id = ? AND r.created < ?
+		WHERE r.owner_id = ? AND r.created > ?
 		ORDER BY r.created DESC
 	`, userID, startOfDay)
 	if err != nil {
