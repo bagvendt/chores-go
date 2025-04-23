@@ -147,3 +147,61 @@ func GetChoreCountsForRoutine(db *sql.DB, routineID int64) (total int, completed
 	err = row.Scan(&total, &completed)
 	return total, completed, err
 }
+
+// GetRelevantRoutines retrieves routines created before today for a specific user
+func GetRelevantRoutines(db *sql.DB, userID int64, today time.Time) ([]models.Routine, error) {
+	// Convert today to UTC and strip time part to get start of day
+	startOfDay := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	rows, err := db.Query(`
+		SELECT r.id, r.created, r.modified, r.owner_id, r.routine_blueprint_id,
+		       NULL as owner_name, 
+		       rb.image as image_url
+		FROM routines r
+		LEFT JOIN routine_blueprints rb ON r.routine_blueprint_id = rb.id
+		WHERE r.owner_id = ? AND r.created < ?
+		ORDER BY r.created DESC
+	`, userID, startOfDay)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var routines []models.Routine
+	for rows.Next() {
+		var r models.Routine
+		var owner models.User
+		var created, modified string
+		var imageUrl sql.NullString
+		var ownerName sql.NullString
+		err := rows.Scan(
+			&r.ID,
+			&created,
+			&modified,
+			&r.OwnerID,
+			&r.RoutineBlueprintID,
+			&ownerName,
+			&imageUrl,
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.Created, _ = time.Parse(time.RFC3339, created)
+		r.Modified, _ = time.Parse(time.RFC3339, modified)
+
+		// Create a basic owner with just the ID
+		owner.ID = r.OwnerID
+		if ownerName.Valid {
+			owner.Name = ownerName.String
+		}
+		r.Owner = &owner
+
+		if imageUrl.Valid {
+			r.ImageUrl = imageUrl.String
+		} else {
+			r.ImageUrl = ""
+		}
+		routines = append(routines, r)
+	}
+	return routines, nil
+}

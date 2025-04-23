@@ -31,8 +31,8 @@ func (s *RoutineService) GetRelevantRoutines(userID int64) ([]models.Displayable
 	now := time.Now() // Get the current time
 	today := now.Weekday()
 
-	// 1. Get concrete routines from the database for the user
-	dbRoutines, err := database.GetRoutines(s.db, userID)
+	// 1. Get relevant routines from the database for the user
+	dbRoutines, err := database.GetRelevantRoutines(s.db, userID, now)
 	if err != nil {
 		return nil, err
 	}
